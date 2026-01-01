@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, addOpportunity, addContact, addDraftEmail } from '../store/store';
-import { Opportunity, Contact, UserRole } from '../types';
+import { Opportunity, Contact } from '../types';
 import { generateOutreachPackage } from '../services/geminiService';
 
 const STAGES = [
@@ -27,7 +27,10 @@ const Pipeline: React.FC = () => {
     });
 
     const handleCreateLead = async () => {
-        if (!form.first_name || !form.phone || !form.email) return;
+        if (!form.first_name || !form.phone || !form.email) {
+            alert("Please fill in Name, Contact and Email.");
+            return;
+        }
         setIsProcessing(true);
         
         const contactId = Math.random().toString(36).substr(2, 9);
@@ -41,7 +44,7 @@ const Pipeline: React.FC = () => {
             city: form.city,
             description: form.description,
             lead_category: form.category as any,
-            tags: ['AI Analyzed'],
+            tags: ['AI Drafted'],
             assigned_to: user?.id || '',
             created_at: new Date().toISOString()
         };
@@ -49,7 +52,7 @@ const Pipeline: React.FC = () => {
         // Call Gemini for initial analysis and email draft
         const pkg = await generateOutreachPackage({ 
             ...form, 
-            tone: 'Professional Roman Urdu mix',
+            tone: 'Professional & Persuasive',
             tenant_name: tenant?.name || 'PakCRM' 
         });
 
@@ -57,7 +60,7 @@ const Pipeline: React.FC = () => {
             id: Math.random().toString(36).substr(2, 9),
             tenant_id: tenant?.id || '',
             contact_id: contactId,
-            title: `${form.category.toUpperCase()} Inquiry - ${form.first_name}`,
+            title: `${form.category.toUpperCase()} Lead - ${form.first_name}`,
             value: Number(form.value) || 0,
             stage: 'lead',
             assigned_to: user?.id || '',
@@ -79,124 +82,205 @@ const Pipeline: React.FC = () => {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 sticky top-0 z-40 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md py-4">
-                <div>
-                    <h2 className="text-3xl font-black text-slate-950 dark:text-white uppercase tracking-tight">Active Rail</h2>
-                    <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mt-1">Neural Flow Optimization</p>
+        <div className="space-y-8 animate-in fade-in duration-500 pb-20 relative">
+            {/* Prominent Header with Fixed Action Button Area */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 sticky top-0 z-[60] py-6 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md">
+                <div className="pl-2">
+                    <h2 className="text-4xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Active <span className="text-primary-crm">Pipeline</span></h2>
+                    <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] mt-1">Managed Lead Velocity Hub</p>
                 </div>
-                <div className="flex gap-3 w-full md:w-auto">
-                   <button 
+                <div className="flex items-center space-x-4 w-full md:w-auto">
+                    <div className="hidden sm:flex items-center space-x-2 bg-white dark:bg-slate-900 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <span className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{opportunities.length} Active Streams</span>
+                    </div>
+                    <button 
                         onClick={() => setShowModal(true)}
-                        className="flex-1 md:flex-none bg-primary-crm text-white px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary-crm/20 hover:scale-105 active:scale-95 transition-all"
+                        className="flex-1 md:flex-none h-16 px-10 bg-slate-950 dark:bg-primary-crm text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-slate-950/20 dark:shadow-primary-crm/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center group"
                     >
-                        <i className="fa-solid fa-plus-circle mr-3"></i> Add New Lead
+                        <i className="fa-solid fa-plus-circle mr-3 text-lg group-hover:rotate-90 transition-transform"></i>
+                        Add New Lead
                     </button>
                 </div>
             </div>
 
             <div className="flex overflow-x-auto pb-10 space-x-6 custom-scrollbar snap-x">
                 {STAGES.map(stage => (
-                    <div key={stage.id} className="min-w-[320px] w-80 shrink-0 snap-start flex flex-col space-y-4">
-                        <div className="flex items-center justify-between px-4">
+                    <div key={stage.id} className="min-w-[340px] w-[340px] shrink-0 snap-start flex flex-col space-y-5">
+                        <div className="flex items-center justify-between px-6 py-2 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm rounded-3xl border border-slate-200/50 dark:border-slate-800/50">
                             <div className="flex items-center space-x-3">
-                                <div className={`h-2 w-2 rounded-full ${stage.color} animate-pulse`}></div>
-                                <h3 className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">{stage.label}</h3>
+                                <div className={`h-2.5 w-2.5 rounded-full ${stage.color} shadow-sm shadow-black/10`}></div>
+                                <h3 className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">{stage.label}</h3>
                             </div>
-                            <span className="text-[9px] font-black text-slate-400 bg-slate-200 dark:bg-slate-800 dark:text-slate-500 px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-black text-slate-500 bg-slate-200 dark:bg-slate-800 px-2.5 py-1 rounded-full min-w-[30px] text-center">
                                 {opportunities.filter(o => o.stage === stage.id).length}
                             </span>
                         </div>
 
-                        <div className="flex-1 bg-slate-100/50 dark:bg-slate-900/50 rounded-[3rem] p-4 border border-slate-200/50 dark:border-slate-800/50 space-y-4 min-h-[500px]">
-                            {opportunities.filter(o => o.stage === stage.id).map(opp => {
-                                const contact = contacts.find(c => c.id === opp.contact_id);
-                                const hasDraft = draftEmails.some(d => d.contactId === opp.contact_id);
-                                return (
-                                    <div 
-                                        key={opp.id} 
-                                        onClick={() => setActiveDetailId(opp.id)}
-                                        className="bg-white dark:bg-slate-800 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer group"
-                                    >
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h4 className="text-sm font-black text-slate-900 dark:text-white truncate uppercase tracking-tight">{contact?.first_name} {contact?.last_name}</h4>
-                                                <p className="text-[9px] font-black text-slate-400 uppercase mt-0.5">{contact?.city || 'Regional Hub'}</p>
-                                            </div>
-                                            {hasDraft && (
-                                                <div className="h-6 w-6 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[9px] font-black animate-bounce">
-                                                    AI
+                        <div className="flex-1 bg-slate-100/30 dark:bg-slate-900/30 rounded-[3rem] p-5 border border-dashed border-slate-300 dark:border-slate-800 space-y-5 min-h-[600px] transition-colors">
+                            {opportunities.filter(o => o.stage === stage.id).length > 0 ? (
+                                opportunities.filter(o => o.stage === stage.id).map(opp => {
+                                    const contact = contacts.find(c => c.id === opp.contact_id);
+                                    const hasDraft = draftEmails.some(d => d.contactId === opp.contact_id);
+                                    return (
+                                        <div 
+                                            key={opp.id} 
+                                            onClick={() => setActiveDetailId(opp.id)}
+                                            className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all cursor-pointer group relative overflow-hidden"
+                                        >
+                                            <div className="flex justify-between items-start mb-4 relative z-10">
+                                                <div>
+                                                    <h4 className="text-sm font-black text-slate-900 dark:text-white truncate uppercase tracking-tight group-hover:text-primary-crm transition-colors">{contact?.first_name} {contact?.last_name}</h4>
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase mt-1 tracking-widest">{contact?.city || 'Regional Lead'}</p>
                                                 </div>
-                                            )}
+                                                {hasDraft && (
+                                                    <div className="h-8 w-8 rounded-2xl bg-primary-crm/10 dark:bg-primary-crm/20 text-primary-crm flex items-center justify-center shadow-inner group-hover:bg-primary-crm group-hover:text-white transition-all">
+                                                        <i className="fa-solid fa-sparkles text-[10px]"></i>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center justify-between pt-5 border-t border-slate-50 dark:border-slate-700/50">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Value Est.</span>
+                                                    <p className="text-xl font-black text-slate-950 dark:text-slate-100 leading-none">PKR {(opp.value / 1000).toFixed(0)}k</p>
+                                                </div>
+                                                <div className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <i className="fa-solid fa-arrow-right-long"></i>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-700/50">
-                                            <p className="text-lg font-black text-slate-950 dark:text-slate-100">PKR {(opp.value / 1000).toFixed(0)}k</p>
-                                            <i className="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-primary-crm transition-colors"></i>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })
+                            ) : (
+                                <div className="h-32 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] flex items-center justify-center text-slate-300 dark:text-slate-700">
+                                    <i className="fa-solid fa-plus-circle text-2xl"></i>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Creation Modal */}
+            {/* Creation Modal - Rich Lead Entry */}
             {showModal && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 animate-in fade-in duration-300">
                     <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl" onClick={() => !isProcessing && setShowModal(false)}></div>
-                    <div className="relative bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3rem] p-8 sm:p-12 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom-10">
+                    <div className="relative bg-white dark:bg-slate-900 w-full max-w-3xl rounded-[3.5rem] p-10 sm:p-14 shadow-[0_50px_100px_rgba(0,0,0,0.5)] flex flex-col max-h-[92vh] overflow-hidden animate-in slide-in-from-bottom-10 border border-white/5">
+                        
                         <div className="flex justify-between items-center mb-10">
                             <div>
-                                <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">New Lead Entry</h3>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Manual Neural Ingestion</p>
+                                <h3 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Initialize New Lead</h3>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 flex items-center">
+                                    <span className="h-2 w-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
+                                    AI Neural Drafting Enabled
+                                </p>
                             </div>
-                            <button onClick={() => setShowModal(false)} className="h-10 w-10 text-slate-400 hover:text-slate-900 dark:hover:text-white"><i className="fa-solid fa-xmark text-xl"></i></button>
+                            <button onClick={() => setShowModal(false)} className="h-14 w-14 rounded-3xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all hover:rotate-90">
+                                <i className="fa-solid fa-xmark text-xl"></i>
+                            </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">First Name</label>
-                                    <input value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-sm font-bold border border-slate-100 dark:border-slate-700 outline-none focus:border-primary-crm dark:text-white" />
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-8 pb-4">
+                            {/* Personal Info Rail */}
+                            <div className="space-y-4">
+                                <h4 className="text-[10px] font-black text-primary-crm uppercase tracking-[0.3em] mb-4">Contact Rail Identity</h4>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">First Name *</label>
+                                        <input 
+                                            value={form.first_name} 
+                                            onChange={e => setForm({...form, first_name: e.target.value})} 
+                                            placeholder="e.g. Abdullah"
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Last Name</label>
+                                        <input 
+                                            value={form.last_name} 
+                                            onChange={e => setForm({...form, last_name: e.target.value})} 
+                                            placeholder="e.g. Khan"
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
+                                        />
+                                    </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Last Name</label>
-                                    <input value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-sm font-bold border border-slate-100 dark:border-slate-700 outline-none focus:border-primary-crm dark:text-white" />
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">WhatsApp / Phone *</label>
+                                        <input 
+                                            value={form.phone} 
+                                            onChange={e => setForm({...form, phone: e.target.value})} 
+                                            placeholder="+92 3XX XXXXXXX"
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Email Address *</label>
+                                        <input 
+                                            value={form.email} 
+                                            onChange={e => setForm({...form, email: e.target.value})} 
+                                            placeholder="abdullah@company.pk"
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phone / WhatsApp</label>
-                                    <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-sm font-bold border border-slate-100 dark:border-slate-700 outline-none focus:border-primary-crm dark:text-white" />
+
+                            {/* Contextual Rail */}
+                            <div className="space-y-4 pt-4 border-t border-slate-50 dark:border-slate-800/50">
+                                <h4 className="text-[10px] font-black text-primary-crm uppercase tracking-[0.3em] mb-4">Opportunity Analysis</h4>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Regional Hub (City)</label>
+                                        <input 
+                                            value={form.city} 
+                                            onChange={e => setForm({...form, city: e.target.value})} 
+                                            placeholder="Karachi, Lahore, etc."
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Deal Value (PKR)</label>
+                                        <input 
+                                            type="number" 
+                                            value={form.value} 
+                                            onChange={e => setForm({...form, value: Number(e.target.value)})} 
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-black border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
+                                        />
+                                    </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address</label>
-                                    <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-sm font-bold border border-slate-100 dark:border-slate-700 outline-none focus:border-primary-crm dark:text-white" />
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Lead Description & Intent</label>
+                                    <textarea 
+                                        placeholder="Describe what the lead is looking for... (Gemini will use this to generate the email)" 
+                                        value={form.description} 
+                                        onChange={e => setForm({...form, description: e.target.value})} 
+                                        className="w-full h-40 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[2rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white resize-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-inner" 
+                                    />
                                 </div>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Deal Value (PKR)</label>
-                                <input type="number" value={form.value} onChange={e => setForm({...form, value: Number(e.target.value)})} className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-sm font-bold border border-slate-100 dark:border-slate-700 outline-none focus:border-primary-crm dark:text-white" />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lead Description / Context</label>
-                                <textarea placeholder="Paste inquiry details here..." value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full h-32 bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-sm font-bold border border-slate-100 dark:border-slate-700 outline-none focus:border-primary-crm dark:text-white resize-none" />
                             </div>
                         </div>
 
-                        <div className="pt-8 mt-4 border-t border-slate-50 dark:border-slate-800">
+                        <div className="pt-10 mt-6 border-t border-slate-100 dark:border-slate-800">
                             <button 
                                 onClick={handleCreateLead}
                                 disabled={isProcessing}
-                                className="w-full py-5 bg-primary-crm text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-primary-crm/30 hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center"
+                                className="w-full h-20 bg-primary-crm text-white rounded-[1.5rem] text-xs font-black uppercase tracking-[0.4em] shadow-[0_20px_50px_rgba(37,99,235,0.3)] hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center relative overflow-hidden"
                             >
                                 {isProcessing ? (
-                                    <>AI Agent Processing <i className="fa-solid fa-spinner fa-spin ml-4"></i></>
+                                    <>
+                                        <i className="fa-solid fa-brain mr-4 animate-pulse"></i>
+                                        Gemini Agent Drafting...
+                                        <i className="fa-solid fa-spinner fa-spin ml-4"></i>
+                                    </>
                                 ) : (
-                                    <>Commit Lead to Pipeline <i className="fa-solid fa-bolt ml-4"></i></>
+                                    <>
+                                        Commit to Pipeline & Auto-Draft
+                                        <i className="fa-solid fa-wand-magic-sparkles ml-4 text-white/50"></i>
+                                    </>
                                 )}
                             </button>
+                            <p className="text-center text-[8px] font-black text-slate-400 uppercase tracking-widest mt-6">Secure Neural Entry Rail v3.11</p>
                         </div>
                     </div>
                 </div>

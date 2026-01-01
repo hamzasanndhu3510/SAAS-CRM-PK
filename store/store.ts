@@ -33,12 +33,15 @@ const initialDashboardData: DashboardData = {
   lifetimeRevenue: []
 };
 
+// Check local storage for theme preference
+const savedTheme = localStorage.getItem('isDarkMode') === 'true';
+
 const initialAuthState: AuthState = {
   user: null,
   tenant: null,
   isAuthenticated: false,
   token: null,
-  isDarkMode: false,
+  isDarkMode: savedTheme,
 };
 
 const initialCRMState: CRMState = {
@@ -64,6 +67,7 @@ const authSlice = createSlice({
     },
     toggleTheme: (state) => {
       state.isDarkMode = !state.isDarkMode;
+      localStorage.setItem('isDarkMode', state.isDarkMode.toString());
     },
     updateTenant: (state, action: PayloadAction<Partial<Tenant>>) => {
       if (state.tenant) state.tenant = { ...state.tenant, ...action.payload };
@@ -98,11 +102,9 @@ const crmSlice = createSlice({
       const opp = state.opportunities.find(o => o.id === action.payload.id);
       if (opp) opp.stage = action.payload.stage;
     },
-    // Fix: Added missing updateFunnelStage reducer for Dashboard.tsx
     updateFunnelStage: (state, action: PayloadAction<{ stage: keyof DashboardData['funnel']; value: number }>) => {
       state.dashboard.funnel[action.payload.stage] = action.payload.value;
     },
-    // Fix: Added missing updateSalesTrend reducer for Dashboard.tsx
     updateSalesTrend: (state, action: PayloadAction<{ index: number; value: number }>) => {
       if (state.dashboard.salesTrend[action.payload.index]) {
         state.dashboard.salesTrend[action.payload.index].value = action.payload.value;

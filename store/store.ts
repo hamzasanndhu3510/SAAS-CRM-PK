@@ -8,6 +8,7 @@ interface AuthState {
   isAuthenticated: boolean;
   token: string | null;
   isDarkMode: boolean;
+  isSidebarExpanded: boolean;
 }
 
 interface DraftEmail {
@@ -33,7 +34,6 @@ const initialDashboardData: DashboardData = {
   lifetimeRevenue: []
 };
 
-// Check local storage for theme preference
 const savedTheme = localStorage.getItem('isDarkMode') === 'true';
 
 const initialAuthState: AuthState = {
@@ -42,6 +42,7 @@ const initialAuthState: AuthState = {
   isAuthenticated: false,
   token: null,
   isDarkMode: savedTheme,
+  isSidebarExpanded: false,
 };
 
 const initialCRMState: CRMState = {
@@ -68,6 +69,9 @@ const authSlice = createSlice({
     toggleTheme: (state) => {
       state.isDarkMode = !state.isDarkMode;
       localStorage.setItem('isDarkMode', state.isDarkMode.toString());
+    },
+    toggleSidebar: (state) => {
+      state.isSidebarExpanded = !state.isSidebarExpanded;
     },
     updateTenant: (state, action: PayloadAction<Partial<Tenant>>) => {
       if (state.tenant) state.tenant = { ...state.tenant, ...action.payload };
@@ -116,7 +120,7 @@ const crmSlice = createSlice({
   }
 });
 
-export const { setAuth, logout, updateTenant, toggleTheme } = authSlice.actions;
+export const { setAuth, logout, updateTenant, toggleTheme, toggleSidebar } = authSlice.actions;
 export const { addContact, addOpportunity, addDraftEmail, markNotificationRead, updateOpportunityStage, updateDashboard, updateSalesTrend, updateFunnelStage } = crmSlice.actions;
 
 export const store = configureStore({

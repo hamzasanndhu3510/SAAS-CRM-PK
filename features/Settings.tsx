@@ -5,178 +5,125 @@ import { RootState, updateTenant } from '../store/store';
 
 const Settings: React.FC = () => {
     const dispatch = useDispatch();
-    const { tenant, user } = useSelector((state: RootState) => state.auth);
+    const { tenant } = useSelector((state: RootState) => state.auth);
     const [color, setColor] = useState(tenant?.primary_color || '#2563eb');
-    const [activeSection, setActiveSection] = useState<'branding' | 'team' | 'integrations'>('branding');
-
-    const handleUpdateBranding = () => {
-        dispatch(updateTenant({ primary_color: color }));
-    };
+    const [activeTab, setActiveTab] = useState<'branding' | 'security' | 'integrations' | 'logs'>('branding');
 
     return (
-        <div className="space-y-12 animate-in fade-in duration-500">
-            <div className="flex justify-between items-end">
+        <div className="space-y-10 animate-in fade-in duration-500">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                 <div>
-                    <h2 className="text-3xl font-black text-slate-950 uppercase tracking-tight">Control Tower</h2>
-                    <p className="text-slate-500 text-sm font-medium">Enterprise configurations for {tenant?.name}</p>
+                    <h2 className="text-3xl font-black text-slate-950 dark:text-white uppercase tracking-tight">Workspace v3.1</h2>
+                    <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Core Engine Controls</p>
                 </div>
-                <div className="flex bg-slate-100 p-1.5 rounded-2xl">
-                    {(['branding', 'team', 'integrations'] as const).map(section => (
+                <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl w-full sm:w-auto overflow-x-auto">
+                    {(['branding', 'security', 'integrations', 'logs'] as const).map(tab => (
                         <button
-                            key={section}
-                            onClick={() => setActiveSection(section)}
-                            className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                activeSection === section ? 'bg-white text-primary-crm shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                                activeTab === tab ? 'bg-white dark:bg-slate-800 text-primary-crm shadow-sm dark:text-white' : 'text-slate-400 dark:text-slate-500'
                             }`}
                         >
-                            {section}
+                            {tab}
                         </button>
                     ))}
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                {activeSection === 'branding' && (
-                    <div className="lg:col-span-7 bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm space-y-8 animate-in fade-in slide-in-from-left-4">
-                        <h3 className="text-lg font-black uppercase tracking-tight flex items-center">
-                            <i className="fa-solid fa-palette mr-3 text-primary-crm"></i> White-Label Engine
-                        </h3>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Primary Identity Color</label>
-                                    <div className="flex items-center space-x-4 bg-slate-50 p-3 rounded-2xl ring-1 ring-slate-100">
-                                        <input 
-                                            type="color" 
-                                            value={color} 
-                                            onChange={(e) => setColor(e.target.value)}
-                                            className="h-10 w-10 rounded-xl border-none cursor-pointer p-0 bg-transparent"
-                                        />
-                                        <input 
-                                            type="text" 
-                                            value={color.toUpperCase()} 
-                                            onChange={(e) => setColor(e.target.value)}
-                                            className="bg-transparent text-xs font-black font-mono border-none focus:ring-0 outline-none w-24"
-                                        />
+                <div className="lg:col-span-8 bg-white dark:bg-slate-900 p-8 sm:p-12 rounded-[3.5rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+                    {activeTab === 'branding' && (
+                        <div className="space-y-10">
+                            <h3 className="text-lg font-black uppercase tracking-tight flex items-center dark:text-white">
+                                <i className="fa-solid fa-palette mr-4 text-primary-crm"></i> Identity System
+                            </h3>
+                            <div className="grid sm:grid-cols-2 gap-8">
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Primary Visual Color</label>
+                                        <div className="flex items-center space-x-4 bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl ring-1 ring-slate-100 dark:ring-slate-700">
+                                            <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-10 w-10 rounded-xl border-none cursor-pointer bg-transparent" />
+                                            <input type="text" value={color.toUpperCase()} className="bg-transparent text-xs font-black font-mono dark:text-white w-24 border-none focus:ring-0" readOnly />
+                                        </div>
                                     </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Regional Currency</label>
+                                        <select className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 dark:text-white">
+                                            <option>PKR (Rs.)</option>
+                                            <option>USD ($)</option>
+                                            <option>AED (Dirham)</option>
+                                        </select>
+                                    </div>
+                                    <button onClick={() => dispatch(updateTenant({ primary_color: color }))} className="w-full py-4 bg-slate-950 dark:bg-primary-crm text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl">Deploy Overrides</button>
                                 </div>
-                                <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Workspace Brand Logo</label>
-                                    <input 
-                                        placeholder="Secure S3 URL or Public Domain" 
-                                        className="w-full bg-slate-50 p-4 rounded-xl text-sm font-bold border-none outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-primary-crm"
-                                        onChange={(e) => dispatch(updateTenant({ logo_url: e.target.value }))}
-                                    />
-                                </div>
-                                <button 
-                                    onClick={handleUpdateBranding}
-                                    className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all hover:scale-[1.02] active:scale-95"
-                                >
-                                    Deploy Branding Globally
-                                </button>
-                            </div>
-                            <div className="bg-slate-50 rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-center space-y-4 border border-slate-100">
-                                <div className="h-20 w-20 rounded-3xl bg-white shadow-xl flex items-center justify-center" style={{ border: `4px solid ${color}` }}>
-                                    <i className="fa-solid fa-rocket text-3xl" style={{ color: color }}></i>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Preview UI Card</p>
-                                    <p className="text-xs font-bold text-slate-600 mt-1">Logo + Identity Sync</p>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-[2.5rem] p-10 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-slate-700">
+                                    <div className="h-20 w-20 rounded-[2rem] bg-white dark:bg-slate-900 shadow-2xl flex items-center justify-center mb-6" style={{ border: `4px solid ${color}` }}>
+                                        <i className="fa-solid fa-rocket text-2xl" style={{ color: color }}></i>
+                                    </div>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Portal Preview</p>
+                                    <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">Active Branding Engine</p>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {activeSection === 'team' && (
-                    <div className="lg:col-span-12 space-y-8 animate-in fade-in slide-in-from-right-4">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-black uppercase tracking-tight flex items-center">
-                                <i className="fa-solid fa-users-gear mr-3 text-primary-crm"></i> Team Access Control (RBAC)
-                            </h3>
-                            <button className="bg-primary-crm text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest">
-                                Invite Employee
-                            </button>
-                        </div>
-                        
-                        <div className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden">
-                            <table className="w-full text-left">
-                                <thead className="bg-slate-50 border-b border-slate-100">
-                                    <tr>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">User Profile</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Role Scoping</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Identity Status</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Control</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    <tr className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center space-x-3">
-                                                <img src={user?.avatar} className="h-10 w-10 rounded-xl" />
-                                                <div>
-                                                    <p className="text-sm font-black text-slate-900">{user?.name} (You)</p>
-                                                    <p className="text-[10px] text-slate-400 font-bold">{user?.email}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-5">
-                                            <span className="bg-blue-50 text-blue-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-blue-100">
-                                                Super Administrator
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center space-x-2 text-emerald-500">
-                                                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                <span className="text-[10px] font-black uppercase">Active HQ</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-5 text-right font-black text-[10px] text-slate-400 uppercase">System Root</td>
-                                    </tr>
-                                    <tr className="hover:bg-slate-50/50 transition-colors opacity-60 grayscale">
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center space-x-3">
-                                                <div className="h-10 w-10 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400 font-black">?</div>
-                                                <div>
-                                                    <p className="text-sm font-black text-slate-400 italic">No Employees Yet</p>
-                                                    <p className="text-[10px] text-slate-300 font-bold uppercase">Awaiting Invitation</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td colSpan={3}></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-
-                {activeSection === 'integrations' && (
-                    <div className="lg:col-span-6 space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                        <section className="bg-slate-950 text-white p-10 rounded-[3rem] shadow-2xl space-y-8">
-                            <h3 className="text-lg font-black uppercase tracking-tight flex items-center">
-                                <i className="fa-solid fa-plug mr-3 text-primary-crm"></i> Provisioned Modules
-                            </h3>
+                    {activeTab === 'logs' && (
+                        <div className="space-y-8">
+                            <h3 className="text-lg font-black uppercase tracking-tight dark:text-white">Neural Audit Trail</h3>
                             <div className="space-y-4">
-                                <div className="p-6 bg-white/5 border border-white/10 rounded-3xl flex justify-between items-center group hover:bg-white/10 transition-all cursor-pointer">
-                                    <div className="flex items-center space-x-4">
-                                        <div className="h-12 w-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center">
-                                            <i className="fa-brands fa-whatsapp text-2xl"></i>
+                                {[
+                                    { event: 'Bulk CSV Processed', user: 'Hamza', time: '10m ago', status: 'success' },
+                                    { event: 'Identity Color Rotation', user: 'System', time: '1h ago', status: 'success' },
+                                    { event: 'API Key Access', user: 'Hamza', time: '5h ago', status: 'warning' }
+                                ].map((log, i) => (
+                                    <div key={i} className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700">
+                                        <div className="flex items-center space-x-4">
+                                            <div className={`h-2 w-2 rounded-full ${log.status === 'success' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
+                                            <div>
+                                                <p className="text-xs font-black text-slate-900 dark:text-white uppercase">{log.event}</p>
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">By {log.user} • {log.time}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h4 className="text-xs font-black uppercase tracking-widest text-white">WhatsApp Business API</h4>
-                                            <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Provider: ZenSend • High Throughput</p>
-                                        </div>
+                                        <i className="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
                                     </div>
-                                    <div className="h-8 w-8 bg-white/10 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-white group-hover:bg-primary-crm transition-all">
-                                        <i className="fa-solid fa-gear"></i>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
-                        </section>
+                        </div>
+                    )}
+                </div>
+
+                <div className="lg:col-span-4 space-y-8">
+                    <div className="bg-slate-950 text-white p-10 rounded-[3rem] shadow-2xl space-y-8 border border-white/5">
+                        <h4 className="text-[10px] font-black text-primary-crm uppercase tracking-widest">SaaS Subscription</h4>
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                                <span className="text-[10px] text-slate-500 font-bold uppercase">Plan</span>
+                                <span className="text-sm font-black uppercase">Enterprise v3</span>
+                            </div>
+                            <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                                <span className="text-[10px] text-slate-500 font-bold uppercase">AI Tokens</span>
+                                <span className="text-sm font-black">UNLIMITED</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-[10px] text-slate-500 font-bold uppercase">Next Payout</span>
+                                <span className="text-sm font-black">Oct 12, 24</span>
+                            </div>
+                        </div>
                     </div>
-                )}
+                    
+                    <div className="p-8 bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200 dark:border-slate-800 space-y-6 shadow-sm">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Modules</h4>
+                        <div className="space-y-3">
+                            {['WhatsApp Bridge', 'Gemini Neural', 'Bulk Processor'].map(m => (
+                                <div key={m} className="flex items-center space-x-3 text-emerald-500">
+                                    <i className="fa-solid fa-circle-check text-[10px]"></i>
+                                    <span className="text-[10px] font-black uppercase tracking-tight">{m}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

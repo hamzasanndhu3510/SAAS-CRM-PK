@@ -3,75 +3,64 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import Sidebar from './Sidebar';
+import Header from './Header';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, tenant } = useSelector((state: RootState) => state.auth);
+  const { tenant, isDarkMode } = useSelector((state: RootState) => state.auth);
+  const currentHash = window.location.hash || '#/';
 
-  const navigateToProfile = () => {
-    window.location.hash = '#/profile';
+  const navigate = (path: string) => {
+    window.location.hash = path;
   };
 
+  const navItems = [
+    { id: 'home', icon: 'fa-solid fa-house', path: '#/' },
+    { id: 'inbox', icon: 'fa-solid fa-envelope', path: '#/inbox' },
+    { id: 'pipelines', icon: 'fa-solid fa-hexagon-nodes-alt', path: '#/pipelines' },
+    { id: 'contacts', icon: 'fa-solid fa-building', path: '#/contacts' },
+    { id: 'automations', icon: 'fa-solid fa-brain', path: '#/automations' },
+    { id: 'profile', icon: 'fa-solid fa-user', path: '#/profile' },
+  ];
+
   return (
-    <div className="flex min-h-screen bg-slate-50" style={{ '--primary-crm': tenant?.primary_color || '#2563eb' } as React.CSSProperties}>
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-10">
-          <div className="flex items-center space-x-4">
-             {tenant?.logo_url ? (
-               <img src={tenant.logo_url} alt="Logo" className="h-8 w-auto max-h-8" />
-             ) : (
-               <h1 className="text-xl font-bold text-slate-900">
-                  {tenant?.name || 'PakCRM'}
-               </h1>
-             )}
-             <span className="bg-blue-50 text-blue-700 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-blue-100 uppercase tracking-wider">
-                Production Environment
-             </span>
-          </div>
+    <div className={`${isDarkMode ? 'dark' : ''}`}>
+        <div className="flex flex-col lg:flex-row min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500" style={{ '--primary-crm': tenant?.primary_color || '#2563eb' } as React.CSSProperties}>
           
-          <div className="flex items-center space-x-4">
-            <button className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-primary-crm hover:bg-slate-50 rounded-full transition-all">
-                <i className="fa-solid fa-bell"></i>
-            </button>
-            <div className="h-8 w-[1px] bg-slate-200"></div>
-            
-            <button 
-                onClick={navigateToProfile}
-                className="flex items-center space-x-3 bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-100 hover:border-primary-crm/30 transition-all group"
-            >
-               <div className="text-right hidden sm:block">
-                  <p className="text-xs font-bold text-slate-900 leading-tight group-hover:text-primary-crm transition-colors">{user?.name}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{user?.role}</p>
-               </div>
-               <div className="relative">
-                  <img 
-                    src={user?.avatar} 
-                    alt="User Profile" 
-                    className="h-8 w-8 rounded-lg border border-slate-200 shadow-sm group-hover:ring-2 ring-primary-crm transition-all" 
-                  />
-                  <span className="absolute -bottom-1 -right-1 h-3 w-3 bg-emerald-500 border-2 border-white rounded-full"></span>
-               </div>
-            </button>
+          {/* Desktop Sidebar Rail */}
+          <div className="hidden lg:block sticky top-0 h-screen shrink-0 z-[100]">
+            <Sidebar />
           </div>
-        </header>
 
-        <main className="flex-1 overflow-y-auto p-6 md:p-10">
-          {children}
-        </main>
-      </div>
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col min-w-0 pb-24 lg:pb-0">
+            <Header />
+            <main className="flex-1 p-4 sm:p-8 lg:p-10 max-w-[1600px] mx-auto w-full transition-all">
+              {children}
+            </main>
+          </div>
 
-      <style>{`
-        .bg-primary-crm { background-color: var(--primary-crm); }
-        .text-primary-crm { color: var(--primary-crm); }
-        .border-primary-crm { border-color: var(--primary-crm); }
-        .ring-primary-crm { --tw-ring-color: var(--primary-crm); }
-        .hover-bg-primary-crm:hover { background-color: var(--primary-crm); }
-      `}</style>
+          {/* Mobile Bottom Navigation */}
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 px-4 py-2 z-[90] flex justify-between items-center shadow-2xl">
+            {navItems.map((item) => {
+              const isActive = currentHash === item.path;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(item.path)}
+                  className="flex-1 flex flex-col items-center justify-center py-2 transition-all duration-300 relative"
+                >
+                  <div className={`transition-all duration-300 ${isActive ? 'text-primary-crm transform -translate-y-1 scale-110' : 'text-slate-400 dark:text-slate-500'}`}>
+                    <i className={`${item.icon} text-lg`}></i>
+                  </div>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
     </div>
   );
 };

@@ -1,108 +1,210 @@
 
-import React from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store/store';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-const StatCard: React.FC<{ title: string; value: string; icon: string; color: string }> = ({ title, value, icon, color }) => (
-  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm transition-all hover:border-blue-200 group">
-    <div className="flex justify-between items-start">
-      <div>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</p>
-        <h3 className="text-2xl font-black text-slate-900 mt-1">{value}</h3>
-      </div>
-      <div className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 ${color}`}>
-        <i className={icon}></i>
-      </div>
-    </div>
-  </div>
-);
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, updateDashboard, updateSalesTrend, updateFunnelStage } from '../store/store';
+import { 
+  XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer, AreaChart, Area 
+} from 'recharts';
 
 const Dashboard: React.FC = () => {
-  const { tenant } = useSelector((state: RootState) => state.auth);
-  const { opportunities, contacts } = useSelector((state: RootState) => state.crm);
+  const dispatch = useDispatch();
+  const { dashboard } = useSelector((state: RootState) => state.crm);
+  const [isTinkerOpen, setIsTinkerOpen] = useState(false);
 
-  const totalValue = opportunities.reduce((acc, curr) => acc + curr.value, 0);
-  const wonValue = opportunities.filter(o => o.stage === 'closed').reduce((acc, curr) => acc + curr.value, 0);
-  
-  const chartData = [
-    { name: 'Total Pipeline', value: totalValue / 1000 },
-    { name: 'Closed Revenue', value: wonValue / 1000 },
-  ];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex justify-between items-end">
-        <div>
-          <h2 className="text-3xl font-black text-slate-950 tracking-tight uppercase">Operational HQ</h2>
-          <p className="text-slate-500 font-medium mt-1">Live metrics for {tenant?.name}</p>
-        </div>
-        <div className="flex space-x-3">
-            <button onClick={() => window.location.hash = '#/pipelines'} className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl">
-                <i className="fa-solid fa-plus mr-2"></i> Create Data Point
+    <div className="relative min-h-screen max-w-[1600px] mx-auto animate-in fade-in duration-700">
+      
+      {/* Tinker Sidebar Drawer - Responsive Width */}
+      <div className={`fixed top-0 right-0 h-full w-full sm:w-80 bg-slate-900 text-white shadow-2xl z-[100] transform transition-transform duration-500 ease-in-out p-6 sm:p-8 overflow-y-auto custom-scrollbar border-l border-white/10 ${isTinkerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="flex justify-between items-center mb-10">
+            <div>
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary-crm">Neural Lab</h3>
+                <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Manual Override Engine</p>
+            </div>
+            <button onClick={() => setIsTinkerOpen(false)} className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                <i className="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Pipeline Value" value={`Rs. ${(totalValue/1000).toFixed(1)}k`} icon="fa-solid fa-money-bill-trend-up" color="bg-blue-50 text-blue-600" />
-        <StatCard title="Closed Revenue" value={`Rs. ${(wonValue/1000).toFixed(1)}k`} icon="fa-solid fa-vault" color="bg-emerald-50 text-emerald-600" />
-        <StatCard title="Active Leads" value={contacts.length.toString()} icon="fa-solid fa-users" color="bg-slate-100 text-slate-900" />
-        <StatCard title="Opportunities" value={opportunities.length.toString()} icon="fa-solid fa-briefcase" color="bg-blue-900 text-white" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm min-w-0">
-          <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-8">Value Distribution (k PKR)</h3>
-          {/* Fix: Explicit height and width on the wrapper div for Recharts calculation */}
-          <div style={{ width: '100%', height: '300px' }} className="block">
-            {opportunities.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 900}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 900}} />
-                    <Tooltip 
-                      cursor={{fill: '#f8fafc'}} 
-                      contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontWeight: '900', fontSize: '12px' }}
-                    />
-                    <Bar dataKey="value" fill="var(--primary-crm)" radius={[8, 8, 0, 0]} barSize={60} />
-                  </BarChart>
-                </ResponsiveContainer>
-            ) : (
-                <div className="h-full flex flex-col items-center justify-center text-slate-300 border-2 border-dashed border-slate-100 rounded-3xl">
-                    <i className="fa-solid fa-chart-simple text-4xl mb-2"></i>
-                    <p className="text-xs font-black uppercase tracking-widest">No Data Points Yet</p>
+        <div className="space-y-12">
+            <div className="space-y-6">
+                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5 pb-2">Primary KPIs</h4>
+                <div className="space-y-4">
+                    {Object.entries(dashboard.summary).map(([key, value]) => (
+                        <div key={key} className="space-y-1">
+                            <label className="text-[9px] font-bold text-slate-400 uppercase">{key.replace(/([A-Z])/g, ' $1')}</label>
+                            <input 
+                                type="number" 
+                                value={value}
+                                onChange={(e) => dispatch(updateDashboard({ summary: { ...dashboard.summary, [key]: Number(e.target.value) } }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-primary-crm transition-all" 
+                            />
+                        </div>
+                    ))}
                 </div>
-            )}
+            </div>
+
+            <div className="space-y-6 pb-20">
+                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5 pb-2">Funnel Velocity</h4>
+                <div className="space-y-4">
+                    {(['visitors', 'productViews', 'addToCart', 'checkOut', 'completeOrder'] as const).map(stage => (
+                        <div key={stage} className="space-y-1">
+                            <label className="text-[9px] font-bold text-slate-400 uppercase">{stage}</label>
+                            <input 
+                                type="number" 
+                                value={dashboard.funnel[stage]}
+                                onChange={(e) => dispatch(updateFunnelStage({ stage, value: Number(e.target.value) }))}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-primary-crm" 
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+      </div>
+
+      {/* Main UI Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8 lg:mb-12">
+        <div>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-950 tracking-tight uppercase leading-none">Dashboard <span className="text-primary-crm">Core</span></h2>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2">Real-time Neural Visualization</p>
+        </div>
+        <button 
+          onClick={() => setIsTinkerOpen(true)}
+          className="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center"
+        >
+          <i className="fa-solid fa-sliders mr-3"></i> Tinker Neural Lab
+        </button>
+      </div>
+
+      {/* Top Section: Sales Chart and Summary KPIs */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mb-6 lg:mb-8">
+        <div className="lg:col-span-8 bg-white p-6 sm:p-10 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col min-h-[400px]">
+          <div className="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4">
+            <div>
+              <p className="text-[12px] font-black text-slate-950 uppercase tracking-tight">Net Revenue Stream</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Growth Velocity Analytics</p>
+            </div>
+            <div className="text-left sm:text-right">
+                <h3 className="text-3xl sm:text-4xl font-black text-slate-950">PKR {(dashboard.summary.revenue / 1000).toFixed(1)}K</h3>
+                <p className="text-[10px] font-black text-emerald-500 uppercase mt-1">
+                  <i className="fa-solid fa-arrow-trend-up mr-1"></i> +12.4% Target Pace
+                </p>
+            </div>
+          </div>
+          <div className="flex-1 w-full min-h-[250px]">
+            <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={dashboard.salesTrend}>
+                  <defs>
+                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" hide />
+                  <YAxis hide />
+                  <Tooltip 
+                    contentStyle={{borderRadius: '16px', border: 'none', background: '#0f172a', color: '#fff', fontSize: '10px', fontWeight: 'bold'}}
+                  />
+                  <Area type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={4} fillOpacity={1} fill="url(#colorSales)" />
+                </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="bg-slate-950 text-white p-8 rounded-[2.5rem] shadow-2xl flex flex-col">
-            <h3 className="text-lg font-black uppercase tracking-tight mb-6">Setup Wizard</h3>
-            <div className="space-y-4">
-                <div className={`p-4 rounded-2xl border ${contacts.length > 0 ? 'bg-blue-900/20 border-blue-500' : 'bg-white/5 border-white/10'}`}>
-                    <div className="flex items-center space-x-3">
-                        <i className={`fa-solid ${contacts.length > 0 ? 'fa-circle-check text-blue-400' : 'fa-circle-dot text-slate-600'}`}></i>
-                        <span className="text-xs font-bold uppercase">1. Add your first Lead</span>
-                    </div>
+        <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 lg:gap-8">
+            <div className="bg-slate-950 text-white p-8 lg:p-10 rounded-[2.5rem] shadow-xl relative overflow-hidden flex flex-col justify-center min-h-[180px]">
+                <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                    <i className="fa-solid fa-chart-line text-[5rem]"></i>
                 </div>
-                <div className={`p-4 rounded-2xl border ${opportunities.length > 0 ? 'bg-blue-900/20 border-blue-500' : 'bg-white/5 border-white/10'}`}>
-                    <div className="flex items-center space-x-3">
-                        <i className={`fa-solid ${opportunities.length > 0 ? 'fa-circle-check text-blue-400' : 'fa-circle-dot text-slate-600'}`}></i>
-                        <span className="text-xs font-bold uppercase">2. Create a Pipeline Deal</span>
-                    </div>
+                <p className="text-[10px] font-black text-primary-crm uppercase tracking-widest mb-2">Total Orders</p>
+                <h4 className="text-4xl lg:text-5xl font-black">{dashboard.summary.orders.toLocaleString()}</h4>
+            </div>
+            <div className="bg-white p-8 lg:p-10 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col justify-center min-h-[180px]">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Avg Order Value</p>
+                <h4 className="text-3xl lg:text-4xl font-black text-slate-950">PKR {dashboard.summary.avgOrderValue.toLocaleString()}</h4>
+            </div>
+        </div>
+      </div>
+
+      {/* Bottom Section: Funnel and Retention */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8">
+        <div className="xl:col-span-7 bg-white p-6 sm:p-10 rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+            <div className="flex justify-between items-center mb-10">
+                <div>
+                    <h3 className="text-lg font-black text-slate-950 uppercase tracking-tight leading-none">Conversion Funnel</h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Leakage Analysis</p>
                 </div>
-                <div className={`p-4 rounded-2xl border bg-white/5 border-white/10`}>
-                    <div className="flex items-center space-x-3">
-                        <i className="fa-solid fa-circle-dot text-slate-600"></i>
-                        <span className="text-xs font-bold uppercase">3. Perform AI Lead Scan</span>
-                    </div>
+                <div className="text-right">
+                   <p className="text-xl font-black text-slate-950">
+                    {dashboard.funnel.visitors > 0 ? ((dashboard.funnel.completeOrder / dashboard.funnel.visitors) * 100).toFixed(1) : 0}%
+                   </p>
+                   <p className="text-[9px] font-black text-slate-400 uppercase mt-1">Success Rate</p>
                 </div>
             </div>
-            <div className="mt-auto pt-8">
-                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-4">Quick Link</p>
-                <button onClick={() => window.location.hash = '#/pipelines'} className="w-full py-4 bg-primary-crm rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary-crm/20">Start Tinkering</button>
+
+            <div className="space-y-4">
+                {[
+                    { label: 'Visitors', val: dashboard.funnel.visitors, color: 'bg-primary-crm' },
+                    { label: 'Views', val: dashboard.funnel.productViews, color: 'bg-blue-500' },
+                    { label: 'Cart', val: dashboard.funnel.addToCart, color: 'bg-indigo-500' },
+                    { label: 'Checkout', val: dashboard.funnel.checkOut, color: 'bg-slate-800' },
+                    { label: 'Complete', val: dashboard.funnel.completeOrder, color: 'bg-emerald-600' }
+                ].map((stage, i) => {
+                    const maxWidth = 100 - (i * 8);
+                    const percentage = Math.max(15, (stage.val / dashboard.funnel.visitors) * 100);
+                    return (
+                        <div key={stage.label} className="relative h-12 w-full flex items-center group">
+                            <div 
+                                className={`absolute inset-y-0 left-0 ${stage.color} rounded-r-2xl transition-all duration-1000 ease-out shadow-lg group-hover:brightness-110`}
+                                style={{ width: `${percentage}%`, maxWidth: `${maxWidth}%` }}
+                            ></div>
+                            <div className="relative z-10 pl-4 sm:pl-6 flex justify-between w-full items-center pr-4 sm:pr-6">
+                                <span className="text-[9px] sm:text-[10px] font-black text-white uppercase tracking-widest">{stage.label}</span>
+                                <span className="text-[10px] font-black text-white">{stage.val.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+
+        <div className="xl:col-span-5 bg-white p-6 sm:p-10 rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <h3 className="text-[13px] font-black text-slate-950 uppercase tracking-tight mb-8">Cohort Retention Heatmap</h3>
+            <div className="flex-1 overflow-x-auto custom-scrollbar pb-4">
+                <table className="w-full border-separate border-spacing-1">
+                    <tbody>
+                        {Array(6).fill(0).map((_, rIndex) => (
+                            <tr key={rIndex}>
+                                <td className="pr-4 py-2 text-[8px] font-black text-slate-400 uppercase whitespace-nowrap">
+                                    {months[rIndex]} 24
+                                </td>
+                                {Array(6).fill(0).map((_, cIndex) => {
+                                    if (cIndex + rIndex >= 6) return <td key={cIndex} className="w-10 sm:w-12"></td>;
+                                    const baseValue = 100 - (cIndex * 15) - (rIndex * 5);
+                                    const opacity = Math.max(0.1, (baseValue / 100));
+                                    return (
+                                        <td key={cIndex} className="p-0.5">
+                                            <div 
+                                                className="h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-xl text-[9px] font-black text-white shadow-sm transition-transform hover:scale-110 cursor-pointer"
+                                                style={{ backgroundColor: `rgba(37, 99, 235, ${opacity})` }}
+                                            >
+                                                {Math.max(0, baseValue)}%
+                                            </div>
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between">
+                <button className="text-primary-crm text-[10px] font-black uppercase tracking-widest hover:translate-x-1 transition-transform">Full Report <i className="fa-solid fa-chevron-right ml-2"></i></button>
             </div>
         </div>
       </div>

@@ -7,6 +7,28 @@ export enum UserRole {
   VIEWER = 'VIEWER'
 }
 
+export interface DashboardData {
+  salesTrend: { name: string; value: number }[];
+  summary: {
+    revenue: number;
+    orders: number;
+    avgOrderValue: number;
+    newSignups: number;
+  };
+  funnel: {
+    visitors: number;
+    productViews: number;
+    addToCart: number;
+    checkOut: number;
+    completeOrder: number;
+  };
+  retention: number[][];
+  lifetimeRevenue: {
+    name: string;
+    [key: string]: string | number;
+  }[];
+}
+
 export interface Tenant {
   id: UUID;
   name: string;
@@ -27,13 +49,6 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
-}
-
-export interface Message {
-  id: UUID;
-  role: 'user' | 'agent';
-  content: string;
-  timestamp: string;
 }
 
 export interface AIAnalysis {
@@ -63,7 +78,6 @@ export interface Contact {
   tags: string[];
   assigned_to: UUID;
   created_at: string;
-  messages?: Message[];
   ai_analysis?: AIAnalysis;
 }
 
@@ -77,4 +91,14 @@ export interface Opportunity {
   assigned_to: UUID;
   last_activity: string;
   ai_analysis?: AIAnalysis;
+}
+
+export interface AutomationTrigger {
+  id: UUID;
+  name: string;
+  description: string;
+  icon: string;
+  type: 'vision' | 'sentiment' | 'time' | 'logic';
+  is_active: boolean;
+  color: string;
 }

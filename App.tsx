@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import { store, setAuth, RootState } from './store/store';
+import { store, setAuth, logout, RootState } from './store/store';
 import Layout from './components/Layout';
 import Dashboard from './features/Dashboard';
 import Pipeline from './features/Pipeline';
@@ -19,8 +19,8 @@ const AuthScreen: React.FC = () => {
 
     const handleAuth = (e: React.FormEvent) => {
         e.preventDefault();
-        // Simulate authentication
-        dispatch(setAuth({
+        
+        const authPayload = {
             user: {
                 id: 'user-' + Math.random().toString(36).substr(2, 9),
                 tenant_id: 'tenant-123',
@@ -36,12 +36,15 @@ const AuthScreen: React.FC = () => {
                 config: { currency: 'PKR', timezone: 'Asia/Karachi' }
             },
             token: 'mock-jwt-token'
-        }));
+        };
+
+        // Persistent Login Logic
+        localStorage.setItem('auth_session', JSON.stringify(authPayload));
+        dispatch(setAuth(authPayload));
     };
 
     return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden">
-            {/* Visual Flair */}
             <div className="absolute top-0 right-0 h-[600px] w-[600px] bg-primary-crm/10 rounded-full blur-[120px] -mr-64 -mt-64"></div>
             <div className="absolute bottom-0 left-0 h-[400px] w-[400px] bg-blue-600/5 rounded-full blur-[100px] -ml-40 -mb-40"></div>
 
@@ -53,7 +56,7 @@ const AuthScreen: React.FC = () => {
                         </div>
                     </div>
                     <h1 className="text-5xl font-black text-white tracking-tighter uppercase">PAK<span className="text-blue-500">CRM</span></h1>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.6em] ml-2">Enterprise Intelligence Rail</p>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.6em] ml-2 leading-none">Enterprise Intelligence Rail</p>
                 </div>
 
                 <form onSubmit={handleAuth} className="bg-slate-900/50 backdrop-blur-3xl p-10 rounded-[4rem] border border-white/5 shadow-2xl space-y-8">
@@ -104,8 +107,22 @@ const AuthScreen: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
+    const dispatch = useDispatch();
     const { isAuthenticated, isDarkMode } = useSelector((state: RootState) => state.auth);
     const [currentRoute, setCurrentRoute] = useState(window.location.hash || '#/');
+
+    // Handle Autologin
+    useEffect(() => {
+        const savedSession = localStorage.getItem('auth_session');
+        if (savedSession) {
+            try {
+                const parsed = JSON.parse(savedSession);
+                dispatch(setAuth(parsed));
+            } catch (e) {
+                localStorage.removeItem('auth_session');
+            }
+        }
+    }, [dispatch]);
 
     useEffect(() => {
         const handleHashChange = () => setCurrentRoute(window.location.hash || '#/');
@@ -114,7 +131,6 @@ const AppContent: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        // FIXED Theme Engine: Reactive and applied correctly to document element
         if (isDarkMode) {
             document.documentElement.classList.add('dark');
             document.body.classList.add('dark');
@@ -152,14 +168,9 @@ const AppContent: React.FC = () => {
                 .animate-loading-bar {
                     animation: loading-bar 1.5s infinite ease-in-out;
                 }
-                .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #64748b; border-radius: 10px; }
-                .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+                .custom-scrollbar::-webkit-scrollbar { height: 0px; width: 0px; }
                 input[type="time"]::-webkit-calendar-picker-indicator {
                     filter: invert(0.5);
-                }
-                .shadow-inner-lg {
-                    box-shadow: inset 0 2px 10px 0 rgba(0, 0, 0, 0.06);
                 }
             `}</style>
         </Layout>

@@ -23,7 +23,7 @@ const Pipeline: React.FC = () => {
 
     const [form, setForm] = useState({ 
         first_name: '', last_name: '', email: '', phone: '', city: '', 
-        description: '', value: 0, category: 'smb'
+        description: '', value: '0', category: 'smb'
     });
 
     const handleCreateLead = async () => {
@@ -49,9 +49,9 @@ const Pipeline: React.FC = () => {
             created_at: new Date().toISOString()
         };
 
-        // Call Gemini for initial analysis and email draft
         const pkg = await generateOutreachPackage({ 
             ...form, 
+            value: Number(form.value) || 0,
             tone: 'Professional & Persuasive',
             tenant_name: tenant?.name || 'PakCRM' 
         });
@@ -78,12 +78,12 @@ const Pipeline: React.FC = () => {
 
         setIsProcessing(false);
         setShowModal(false);
-        setForm({ first_name: '', last_name: '', email: '', phone: '', city: '', description: '', value: 0, category: 'smb' });
+        setForm({ first_name: '', last_name: '', email: '', phone: '', city: '', description: '', value: '0', category: 'smb' });
     };
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-20 relative">
-            {/* Prominent Header with Fixed Action Button Area */}
+            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 sticky top-0 z-[60] py-6 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md">
                 <div className="pl-2">
                     <h2 className="text-4xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Active <span className="text-primary-crm">Pipeline</span></h2>
@@ -161,126 +161,137 @@ const Pipeline: React.FC = () => {
                 ))}
             </div>
 
-            {/* Creation Modal - Rich Lead Entry */}
+            {/* Creation Modal - SYNCED WITH CONTACTS UI */}
             {showModal && (
-                <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 animate-in fade-in duration-300">
+                <div className="fixed inset-0 lg:left-[var(--sidebar-width,80px)] lg:w-[calc(100%-var(--sidebar-width,80px))] z-[150] flex items-center justify-center p-6 animate-in fade-in duration-300">
                     <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl" onClick={() => !isProcessing && setShowModal(false)}></div>
-                    <div className="relative bg-white dark:bg-slate-900 w-full max-w-3xl rounded-[3.5rem] p-10 sm:p-14 shadow-[0_50px_100px_rgba(0,0,0,0.5)] flex flex-col max-h-[92vh] overflow-hidden animate-in slide-in-from-bottom-10 border border-white/5">
+                    <div className="relative bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3rem] p-10 shadow-[0_50px_100px_rgba(0,0,0,0.5)] flex flex-col max-h-[92vh] overflow-hidden border border-white/5">
                         
-                        <div className="flex justify-between items-center mb-10">
+                        <div className="flex justify-between items-center mb-8 shrink-0">
                             <div>
-                                <h3 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Initialize New Lead</h3>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 flex items-center">
-                                    <span className="h-2 w-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
+                                <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Initialize New Lead</h3>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 flex items-center">
+                                    <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
                                     AI Neural Drafting Enabled
                                 </p>
                             </div>
-                            <button onClick={() => setShowModal(false)} className="h-14 w-14 rounded-3xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all hover:rotate-90">
-                                <i className="fa-solid fa-xmark text-xl"></i>
+                            <button onClick={() => setShowModal(false)} className="h-12 w-12 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">
+                                <i className="fa-solid fa-xmark text-lg"></i>
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-8 pb-4">
-                            {/* Personal Info Rail */}
-                            <div className="space-y-4">
-                                <h4 className="text-[10px] font-black text-primary-crm uppercase tracking-[0.3em] mb-4">Contact Rail Identity</h4>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">First Name *</label>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6 pb-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Name *</label>
+                                    <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-2xl focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
                                         <input 
                                             value={form.first_name} 
                                             onChange={e => setForm({...form, first_name: e.target.value})} 
-                                            placeholder="e.g. Abdullah"
-                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Last Name</label>
-                                        <input 
-                                            value={form.last_name} 
-                                            onChange={e => setForm({...form, last_name: e.target.value})} 
-                                            placeholder="e.g. Khan"
-                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">WhatsApp / Phone *</label>
-                                        <input 
-                                            value={form.phone} 
-                                            onChange={e => setForm({...form, phone: e.target.value})} 
-                                            placeholder="+92 3XX XXXXXXX"
-                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Email Address *</label>
-                                        <input 
-                                            value={form.email} 
-                                            onChange={e => setForm({...form, email: e.target.value})} 
-                                            placeholder="abdullah@company.pk"
-                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Contextual Rail */}
-                            <div className="space-y-4 pt-4 border-t border-slate-50 dark:border-slate-800/50">
-                                <h4 className="text-[10px] font-black text-primary-crm uppercase tracking-[0.3em] mb-4">Opportunity Analysis</h4>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Regional Hub (City)</label>
-                                        <input 
-                                            value={form.city} 
-                                            onChange={e => setForm({...form, city: e.target.value})} 
-                                            placeholder="Karachi, Lahore, etc."
-                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Deal Value (PKR)</label>
-                                        <input 
-                                            type="number" 
-                                            value={form.value} 
-                                            onChange={e => setForm({...form, value: Number(e.target.value)})} 
-                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-black border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white transition-all" 
+                                            placeholder="Name"
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-sm font-bold border-none outline-none dark:text-white transition-all" 
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Lead Description & Intent</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Last Name</label>
+                                    <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-2xl focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
+                                        <input 
+                                            value={form.last_name} 
+                                            onChange={e => setForm({...form, last_name: e.target.value})} 
+                                            placeholder="Last Name"
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-sm font-bold border-none outline-none dark:text-white transition-all" 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">WhatsApp / Phone *</label>
+                                    <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-2xl focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
+                                        <input 
+                                            value={form.phone} 
+                                            onChange={e => setForm({...form, phone: e.target.value})} 
+                                            placeholder="WhatsApp / Phone"
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-sm font-bold border-none outline-none dark:text-white transition-all" 
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Email Address *</label>
+                                    <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-2xl focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
+                                        <input 
+                                            value={form.email} 
+                                            onChange={e => setForm({...form, email: e.target.value})} 
+                                            placeholder="Email Address"
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-sm font-bold border-none outline-none dark:text-white transition-all" 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Regional Hub (City)</label>
+                                    <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-2xl focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
+                                        <input 
+                                            value={form.city} 
+                                            onChange={e => setForm({...form, city: e.target.value})} 
+                                            placeholder="City"
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-sm font-bold border-none outline-none dark:text-white transition-all" 
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Deal Value (PKR)</label>
+                                    <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-2xl focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
+                                        <input 
+                                            type="text" 
+                                            value={form.value} 
+                                            onChange={e => setForm({...form, value: e.target.value})} 
+                                            placeholder="Value"
+                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-sm font-black border-none outline-none dark:text-white transition-all" 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Lead Description & Intent</label>
+                                <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-[1.5rem] focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
                                     <textarea 
-                                        placeholder="Describe what the lead is looking for... (Gemini will use this to generate the email)" 
+                                        placeholder="Brief description..." 
                                         value={form.description} 
                                         onChange={e => setForm({...form, description: e.target.value})} 
-                                        className="w-full h-40 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[2rem] text-sm font-bold border-none outline-none ring-1 ring-slate-100 dark:ring-slate-700 focus:ring-2 focus:ring-primary-crm dark:text-white resize-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-inner" 
+                                        className="w-full h-32 bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none dark:text-white resize-none shadow-inner transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600" 
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="pt-10 mt-6 border-t border-slate-100 dark:border-slate-800">
+                        <div className="pt-6 mt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4">
+                            <button 
+                                onClick={() => setShowModal(false)}
+                                className="flex-1 h-14 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                            >
+                                Cancel
+                            </button>
                             <button 
                                 onClick={handleCreateLead}
                                 disabled={isProcessing}
-                                className="w-full h-20 bg-primary-crm text-white rounded-[1.5rem] text-xs font-black uppercase tracking-[0.4em] shadow-[0_20px_50px_rgba(37,99,235,0.3)] hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center relative overflow-hidden"
+                                className="flex-[2] h-14 bg-primary-crm text-white rounded-xl text-[10px] font-black uppercase tracking-[0.3em] shadow-lg shadow-primary-crm/20 hover:scale-[1.01] active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center group"
                             >
                                 {isProcessing ? (
                                     <>
-                                        <i className="fa-solid fa-brain mr-4 animate-pulse"></i>
-                                        Gemini Agent Drafting...
-                                        <i className="fa-solid fa-spinner fa-spin ml-4"></i>
+                                        <i className="fa-solid fa-spinner fa-spin mr-3"></i>
+                                        Drafting Outreach...
                                     </>
                                 ) : (
                                     <>
-                                        Commit to Pipeline & Auto-Draft
-                                        <i className="fa-solid fa-wand-magic-sparkles ml-4 text-white/50"></i>
+                                        Commit to Pipeline
+                                        <i className="fa-solid fa-wand-magic-sparkles ml-3 text-white/50"></i>
                                     </>
                                 )}
                             </button>
-                            <p className="text-center text-[8px] font-black text-slate-400 uppercase tracking-widest mt-6">Secure Neural Entry Rail v3.11</p>
                         </div>
                     </div>
                 </div>

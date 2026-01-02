@@ -65,6 +65,7 @@ const authSlice = createSlice({
       state.tenant = action.payload.tenant;
       state.token = action.payload.token;
       state.isAuthenticated = true;
+      // Persistence handled in the component for simplicity
     },
     toggleTheme: (state) => {
       state.isDarkMode = !state.isDarkMode;
@@ -81,6 +82,7 @@ const authSlice = createSlice({
       state.tenant = null;
       state.token = null;
       state.isAuthenticated = false;
+      localStorage.removeItem('auth_session');
     }
   }
 });
@@ -91,6 +93,9 @@ const crmSlice = createSlice({
   reducers: {
     addContact: (state, action: PayloadAction<Contact>) => {
       state.contacts.unshift(action.payload);
+    },
+    addContactsBatch: (state, action: PayloadAction<Contact[]>) => {
+      state.contacts = [...action.payload, ...state.contacts];
     },
     addOpportunity: (state, action: PayloadAction<Opportunity>) => {
       state.opportunities.unshift(action.payload);
@@ -106,14 +111,6 @@ const crmSlice = createSlice({
       const opp = state.opportunities.find(o => o.id === action.payload.id);
       if (opp) opp.stage = action.payload.stage;
     },
-    updateFunnelStage: (state, action: PayloadAction<{ stage: keyof DashboardData['funnel']; value: number }>) => {
-      state.dashboard.funnel[action.payload.stage] = action.payload.value;
-    },
-    updateSalesTrend: (state, action: PayloadAction<{ index: number; value: number }>) => {
-      if (state.dashboard.salesTrend[action.payload.index]) {
-        state.dashboard.salesTrend[action.payload.index].value = action.payload.value;
-      }
-    },
     updateDashboard: (state, action: PayloadAction<Partial<DashboardData>>) => {
       state.dashboard = { ...state.dashboard, ...action.payload };
     }
@@ -121,7 +118,7 @@ const crmSlice = createSlice({
 });
 
 export const { setAuth, logout, updateTenant, toggleTheme, toggleSidebar } = authSlice.actions;
-export const { addContact, addOpportunity, addDraftEmail, markNotificationRead, updateOpportunityStage, updateDashboard, updateSalesTrend, updateFunnelStage } = crmSlice.actions;
+export const { addContact, addContactsBatch, addOpportunity, addDraftEmail, markNotificationRead, updateOpportunityStage, updateDashboard } = crmSlice.actions;
 
 export const store = configureStore({
   reducer: {

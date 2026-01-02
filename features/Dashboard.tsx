@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, updateDashboard, updateSalesTrend, updateFunnelStage } from '../store/store';
+// Fixed: Removed non-existent exported members updateSalesTrend and updateFunnelStage from store/store
+import { RootState, updateDashboard } from '../store/store';
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, 
   ResponsiveContainer, AreaChart, Area 
@@ -11,8 +12,13 @@ const Dashboard: React.FC = () => {
   const dispatch = useDispatch();
   const { dashboard } = useSelector((state: RootState) => state.crm);
   const [isTinkerOpen, setIsTinkerOpen] = useState(false);
+  const [isChartReady, setIsChartReady] = useState(false);
 
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  // Small delay to ensure parent dimensions are calculated correctly for ResponsiveContainer
+  useEffect(() => {
+    const timer = setTimeout(() => setIsChartReady(true), 150);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="relative min-h-screen max-w-[1600px] mx-auto animate-in fade-in duration-700">
@@ -63,52 +69,55 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mb-6 lg:mb-8">
-        {/* FIXED: Added min-h and min-w-0 to the chart container to resolve Recharts dimension error */}
-        <div className="lg:col-span-8 bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col min-h-[450px] min-w-0">
-          <div className="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4">
+        <div className="lg:col-span-8 bg-white dark:bg-slate-900 p-6 sm:p-10 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col min-h-[500px] min-w-0 transition-all overflow-hidden">
+          <div className="flex flex-col sm:flex-row justify-between items-start mb-10 gap-4">
             <div>
               <p className="text-[12px] font-black text-slate-950 dark:text-white uppercase tracking-tight">Net Revenue Stream</p>
               <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Growth Velocity Analytics</p>
             </div>
             <div className="text-left sm:text-right">
-                <h3 className="text-3xl sm:text-4xl font-black text-slate-950 dark:text-white">PKR {(dashboard.summary.revenue / 1000).toFixed(1)}K</h3>
-                <p className="text-[10px] font-black text-emerald-500 uppercase mt-1">
+                <h3 className="text-3xl sm:text-4xl font-black text-slate-950 dark:text-white leading-none">PKR {(dashboard.summary.revenue / 1000).toFixed(1)}K</h3>
+                <p className="text-[10px] font-black text-emerald-500 uppercase mt-2">
                   <i className="fa-solid fa-arrow-trend-up mr-1"></i> +12.4% Target Pace
                 </p>
             </div>
           </div>
-          <div className="flex-1 w-full min-h-[300px]">
-            <ResponsiveContainer width="99%" height="100%">
-                <AreaChart data={dashboard.salesTrend}>
-                  <defs>
-                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="opacity-10" />
-                  <XAxis dataKey="name" hide />
-                  <YAxis hide />
-                  <Tooltip 
-                    contentStyle={{borderRadius: '16px', border: 'none', background: '#0f172a', color: '#fff', fontSize: '10px', fontWeight: 'bold'}}
-                  />
-                  <Area type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={4} fillOpacity={1} fill="url(#colorSales)" />
-                </AreaChart>
-            </ResponsiveContainer>
+          
+          <div className="flex-1 w-full relative min-h-[350px]">
+            {isChartReady && (
+              <ResponsiveContainer width="100%" height="100%" minHeight={350}>
+                  <AreaChart data={dashboard.salesTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.15}/>
+                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#94a3b8" className="opacity-10" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 'bold'}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 'bold'}} />
+                    <Tooltip 
+                      contentStyle={{borderRadius: '16px', border: 'none', background: '#0f172a', color: '#fff', fontSize: '10px', fontWeight: 'bold'}}
+                      cursor={{ stroke: '#2563eb', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    />
+                    <Area type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={4} fillOpacity={1} fill="url(#colorSales)" animationDuration={1000} />
+                  </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
         <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 lg:gap-8">
-            <div className="bg-slate-950 text-white p-8 lg:p-10 rounded-[2.5rem] shadow-xl relative overflow-hidden flex flex-col justify-center min-h-[180px]">
-                <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+            <div className="bg-slate-950 text-white p-8 lg:p-10 rounded-[2.5rem] shadow-xl relative overflow-hidden flex flex-col justify-center min-h-[180px] group transition-all hover:-translate-y-1">
+                <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none group-hover:scale-125 transition-transform">
                     <i className="fa-solid fa-chart-line text-[5rem]"></i>
                 </div>
                 <p className="text-[10px] font-black text-primary-crm uppercase tracking-widest mb-2">Total Orders</p>
                 <h4 className="text-4xl lg:text-5xl font-black">{dashboard.summary.orders.toLocaleString()}</h4>
             </div>
-            <div className="bg-white dark:bg-slate-900 p-8 lg:p-10 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center min-h-[180px]">
+            <div className="bg-white dark:bg-slate-900 p-8 lg:p-10 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center min-h-[180px] transition-all hover:-translate-y-1">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Avg Order Value</p>
-                <h4 className="text-3xl lg:text-4xl font-black text-slate-950 dark:text-white">PKR {dashboard.summary.avgOrderValue.toLocaleString()}</h4>
+                <h4 className="text-3xl lg:text-4xl font-black text-slate-950 dark:text-white leading-none">PKR {dashboard.summary.avgOrderValue.toLocaleString()}</h4>
             </div>
         </div>
       </div>

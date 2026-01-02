@@ -11,7 +11,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { tenant } = useSelector((state: RootState) => state.auth);
+  const { tenant, isSidebarExpanded } = useSelector((state: RootState) => state.auth);
   const currentHash = window.location.hash || '#/';
 
   const navigate = (path: string) => {
@@ -28,7 +28,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500" style={{ '--primary-crm': tenant?.primary_color || '#2563eb' } as React.CSSProperties}>
+    <div 
+        className="flex flex-col lg:flex-row min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500" 
+        style={{ 
+            '--primary-crm': tenant?.primary_color || '#2563eb',
+            '--sidebar-width': isSidebarExpanded ? '256px' : '80px'
+        } as React.CSSProperties}
+    >
       
       {/* Desktop Sidebar Rail */}
       <div className="hidden lg:block sticky top-0 h-screen shrink-0 z-[100]">
@@ -38,7 +44,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 pb-24 lg:pb-0">
         <Header />
-        <main className="flex-1 p-4 sm:p-8 lg:p-10 max-w-[1600px] mx-auto w-full transition-all">
+        <main className="flex-1 p-4 sm:p-8 lg:p-10 max-w-[1600px] mx-auto w-full transition-all relative">
           {children}
         </main>
       </div>

@@ -1,11 +1,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, markNotificationRead, logout } from '../store/store';
+import { RootState, markNotificationRead, logout, toggleTheme } from '../store/store';
 
 const Header: React.FC = () => {
     const dispatch = useDispatch();
-    const { tenant, user } = useSelector((state: RootState) => state.auth);
+    const { tenant, user, isDarkMode } = useSelector((state: RootState) => state.auth);
     const { notifications } = useSelector((state: RootState) => state.crm);
     
     const [showNotifications, setShowNotifications] = useState(false);
@@ -49,14 +49,25 @@ const Header: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-3 sm:space-x-5">
-                {/* Requested Theme Toggle Button */}
-                <button 
-                    // This uses the global window function injected in App.tsx
-                    onClick={() => (window as any).toggleDarkMode()}
-                    className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95"
-                >
-                    Toggle Mode
-                </button>
+                {/* Premium Interactive Theme Toggle */}
+                <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner group">
+                    <button 
+                        onClick={() => !isDarkMode && dispatch(toggleTheme())}
+                        className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-slate-950 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                        title="Dark Mode"
+                    >
+                        <i className={`fa-solid fa-moon text-xs ${isDarkMode ? 'animate-pulse' : ''}`}></i>
+                        <span className={`text-[8px] font-black uppercase tracking-widest ${isDarkMode ? 'block' : 'hidden md:block'}`}>Night</span>
+                    </button>
+                    <button 
+                        onClick={() => isDarkMode && dispatch(toggleTheme())}
+                        className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl transition-all duration-300 ${!isDarkMode ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
+                        title="Light Mode"
+                    >
+                        <i className={`fa-solid fa-sun text-xs ${!isDarkMode ? 'text-amber-500' : ''}`}></i>
+                        <span className={`text-[8px] font-black uppercase tracking-widest ${!isDarkMode ? 'block' : 'hidden md:block'}`}>Day</span>
+                    </button>
+                </div>
 
                 {/* Notifications */}
                 <div className="relative" ref={notificationRef}>

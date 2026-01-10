@@ -49,25 +49,19 @@ const Header: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-3 sm:space-x-5">
-                {/* Premium Interactive Theme Toggle */}
-                <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner group">
-                    <button 
-                        onClick={() => !isDarkMode && dispatch(toggleTheme())}
-                        className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-slate-950 text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
-                        title="Dark Mode"
-                    >
-                        <i className={`fa-solid fa-moon text-xs ${isDarkMode ? 'animate-pulse' : ''}`}></i>
-                        <span className={`text-[8px] font-black uppercase tracking-widest ${isDarkMode ? 'block' : 'hidden md:block'}`}>Night</span>
-                    </button>
-                    <button 
-                        onClick={() => isDarkMode && dispatch(toggleTheme())}
-                        className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl transition-all duration-300 ${!isDarkMode ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
-                        title="Light Mode"
-                    >
-                        <i className={`fa-solid fa-sun text-xs ${!isDarkMode ? 'text-amber-500' : ''}`}></i>
-                        <span className={`text-[8px] font-black uppercase tracking-widest ${!isDarkMode ? 'block' : 'hidden md:block'}`}>Day</span>
-                    </button>
-                </div>
+                {/* Refined Reliable Icon-Only Theme Toggle */}
+                <button 
+                    onClick={() => dispatch(toggleTheme())}
+                    className="h-11 w-11 rounded-2xl bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-all hover:scale-105 active:scale-90 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden relative"
+                    title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                >
+                    <div className={`transition-all duration-500 transform ${isDarkMode ? 'rotate-0 opacity-100 scale-100' : '-rotate-90 opacity-0 scale-0'}`}>
+                        <i className="fa-solid fa-moon text-sm text-blue-400"></i>
+                    </div>
+                    <div className={`absolute transition-all duration-500 transform ${!isDarkMode ? 'rotate-0 opacity-100 scale-100' : 'rotate-90 opacity-0 scale-0'}`}>
+                        <i className="fa-solid fa-sun text-sm text-amber-500"></i>
+                    </div>
+                </button>
 
                 {/* Notifications */}
                 <div className="relative" ref={notificationRef}>

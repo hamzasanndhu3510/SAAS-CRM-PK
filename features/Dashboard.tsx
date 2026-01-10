@@ -42,9 +42,10 @@ const Dashboard: React.FC = () => {
                     {Object.entries(dashboard.summary).map(([key, value]) => (
                         <div key={key} className="space-y-1">
                             <label className="text-[9px] font-bold text-slate-400 uppercase">{key.replace(/([A-Z])/g, ' $1')}</label>
+                            {/* Explicitly cast value to number as Object.entries can sometimes infer values as unknown in certain TS configurations */}
                             <input 
                                 type="number" 
-                                value={value}
+                                value={value as number}
                                 onChange={(e) => dispatch(updateDashboard({ summary: { ...dashboard.summary, [key]: Number(e.target.value) } }))}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-primary-crm transition-all" 
                             />

@@ -1,5 +1,5 @@
 {
-  "name": "pakcrm---multi-tenant-saas",
+  "name": "ah-crm---multi-tenant-saas",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -15,7 +15,8 @@
     "recharts": "^3.6.0",
     "react-redux": "^9.2.0",
     "@reduxjs/toolkit": "^2.11.2",
-    "xlsx": "0.18.5"
+    "xlsx": "0.18.5",
+    "react-quill": "^3.3.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

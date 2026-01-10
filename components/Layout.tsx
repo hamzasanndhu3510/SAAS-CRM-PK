@@ -44,7 +44,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 pb-24 lg:pb-0">
         <Header />
-        <main className="flex-1 p-4 sm:p-8 lg:p-10 max-w-[1600px] mx-auto w-full transition-all relative">
+        <main 
+            id="theme-container"
+            className="flex-1 p-4 sm:p-8 lg:p-10 max-w-[1600px] mx-auto w-full transition-all relative"
+        >
           {children}
         </main>
       </div>

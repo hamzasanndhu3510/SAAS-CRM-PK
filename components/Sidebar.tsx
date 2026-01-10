@@ -57,7 +57,7 @@ const Sidebar: React.FC = () => {
                     </div>
                     <div className={`ml-4 transition-all duration-500 overflow-hidden ${isSidebarExpanded ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
                         <span className="text-sm font-black uppercase tracking-tighter whitespace-nowrap">
-                            PAK<span className="text-primary-crm">CRM</span>
+                            AH <span className="text-primary-crm">CRM</span>
                         </span>
                     </div>
                 </div>

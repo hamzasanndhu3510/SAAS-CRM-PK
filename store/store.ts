@@ -65,7 +65,9 @@ const authSlice = createSlice({
       state.tenant = action.payload.tenant;
       state.token = action.payload.token;
       state.isAuthenticated = true;
-      // Persistence handled in the component for simplicity
+    },
+    hydrateAuth: (state, action: PayloadAction<AuthState>) => {
+      return { ...state, ...action.payload };
     },
     toggleTheme: (state) => {
       state.isDarkMode = !state.isDarkMode;
@@ -117,7 +119,7 @@ const crmSlice = createSlice({
   }
 });
 
-export const { setAuth, logout, updateTenant, toggleTheme, toggleSidebar } = authSlice.actions;
+export const { setAuth, logout, updateTenant, toggleTheme, toggleSidebar, hydrateAuth } = authSlice.actions;
 export const { addContact, addContactsBatch, addOpportunity, addDraftEmail, markNotificationRead, updateOpportunityStage, updateDashboard } = crmSlice.actions;
 
 export const store = configureStore({

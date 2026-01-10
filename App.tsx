@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import { store, setAuth, logout, RootState } from './store/store';
+import { store, setAuth, toggleTheme, RootState, hydrateAuth } from './store/store';
 import Layout from './components/Layout';
 import Dashboard from './features/Dashboard';
 import Pipeline from './features/Pipeline';
@@ -38,8 +38,13 @@ const AuthScreen: React.FC = () => {
             token: 'mock-jwt-token'
         };
 
-        // Persistent Login Logic
-        localStorage.setItem('auth_session', JSON.stringify(authPayload));
+        // Established Persistent Identity Tunnel
+        localStorage.setItem('auth_session', JSON.stringify({
+            ...authPayload,
+            isAuthenticated: true,
+            isDarkMode: localStorage.getItem('isDarkMode') === 'true'
+        }));
+        
         dispatch(setAuth(authPayload));
     };
 
@@ -51,18 +56,18 @@ const AuthScreen: React.FC = () => {
             <div className="max-w-md w-full space-y-12 animate-in fade-in zoom-in-95 duration-700 relative z-10">
                 <div className="text-center space-y-4">
                     <div className="flex justify-center">
-                        <div className="h-24 w-24 bg-blue-600 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_50px_rgba(37,99,235,0.4)] animate-pulse">
+                        <div className="h-24 w-24 bg-blue-600 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_50px_rgba(37,99,235,0.4)]">
                             <i className="fa-solid fa-cube text-5xl text-white"></i>
                         </div>
                     </div>
-                    <h1 className="text-5xl font-black text-white tracking-tighter uppercase">PAK<span className="text-blue-500">CRM</span></h1>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.6em] ml-2 leading-none">Enterprise Intelligence Rail</p>
+                    <h1 className="text-5xl font-black text-white tracking-tighter uppercase">AH <span className="text-blue-500">CRM</span></h1>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.6em] ml-2 leading-none">Persistent Intelligence Link</p>
                 </div>
 
                 <form onSubmit={handleAuth} className="bg-slate-900/50 backdrop-blur-3xl p-10 rounded-[4rem] border border-white/5 shadow-2xl space-y-8">
                     <div className="space-y-5">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-3">Secure Identity Rail (Email)</label>
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-3">Identity Email</label>
                             <input 
                                 required
                                 type="email" 
@@ -73,7 +78,7 @@ const AuthScreen: React.FC = () => {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-3">Encrypted Cipher</label>
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-3">Cipher Key</label>
                             <input 
                                 required
                                 type="password" 
@@ -85,8 +90,8 @@ const AuthScreen: React.FC = () => {
                         </div>
                     </div>
 
-                    <button type="submit" className="w-full py-6 bg-blue-600 text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.4em] shadow-xl shadow-blue-600/30 hover:scale-[1.03] active:scale-95 transition-all">
-                        {isLogin ? 'Access Workspace Link' : 'Initialize New Identity'}
+                    <button type="submit" className="w-full py-6 bg-blue-600 text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.4em] shadow-xl hover:scale-[1.03] transition-all">
+                        {isLogin ? 'Access Identity Stream' : 'Deploy New identity'}
                     </button>
 
                     <div className="text-center">
@@ -95,12 +100,11 @@ const AuthScreen: React.FC = () => {
                             onClick={() => setIsLogin(!isLogin)}
                             className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-all underline decoration-slate-800 underline-offset-8"
                         >
-                            {isLogin ? "No identity? Deploy Account" : "Identity Verified? Login"}
+                            {isLogin ? "No identity? Establish Link" : "Link Verified? Login"}
                         </button>
                     </div>
                 </form>
-                
-                <p className="text-center text-[8px] font-black text-slate-600 uppercase tracking-widest">Localized Regional Security v3.1.2</p>
+                <div className="text-center text-[9px] font-black text-slate-700 uppercase tracking-widest">Session Persistence Active v3.1</div>
             </div>
         </div>
     );
@@ -110,18 +114,29 @@ const AppContent: React.FC = () => {
     const dispatch = useDispatch();
     const { isAuthenticated, isDarkMode } = useSelector((state: RootState) => state.auth);
     const [currentRoute, setCurrentRoute] = useState(window.location.hash || '#/');
+    const [isAppReady, setIsAppReady] = useState(false);
 
-    // Handle Autologin
+    // Initial Identity Session Check (Autologin)
     useEffect(() => {
         const savedSession = localStorage.getItem('auth_session');
         if (savedSession) {
             try {
                 const parsed = JSON.parse(savedSession);
-                dispatch(setAuth(parsed));
+                if (parsed.isAuthenticated) {
+                    dispatch(hydrateAuth(parsed));
+                }
             } catch (e) {
                 localStorage.removeItem('auth_session');
             }
         }
+        setIsAppReady(true);
+    }, [dispatch]);
+
+    // Establish Global Dark Mode Bridge
+    useEffect(() => {
+        (window as any).toggleDarkMode = () => {
+            dispatch(toggleTheme());
+        };
     }, [dispatch]);
 
     useEffect(() => {
@@ -139,6 +154,14 @@ const AppContent: React.FC = () => {
             document.body.classList.remove('dark');
         }
     }, [isDarkMode]);
+
+    if (!isAppReady) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <div className="h-12 w-12 border-4 border-primary-crm border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     if (!isAuthenticated) {
         return <AuthScreen />;
@@ -161,17 +184,7 @@ const AppContent: React.FC = () => {
         <Layout>
             {renderRoute()}
             <style>{`
-                @keyframes loading-bar {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(300%); }
-                }
-                .animate-loading-bar {
-                    animation: loading-bar 1.5s infinite ease-in-out;
-                }
                 .custom-scrollbar::-webkit-scrollbar { height: 0px; width: 0px; }
-                input[type="time"]::-webkit-calendar-picker-indicator {
-                    filter: invert(0.5);
-                }
             `}</style>
         </Layout>
     );

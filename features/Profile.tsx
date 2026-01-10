@@ -10,7 +10,7 @@ const Profile: React.FC = () => {
     const [profileForm, setProfileForm] = useState({
         name: user?.name || '',
         email: user?.email || '',
-        bio: `Senior Business Development Associate at ${tenant?.name || 'PakCRM'}. Specializing in localized market outreach and neural lead processing.`,
+        bio: `Senior Business Development Associate at ${tenant?.name || 'AH CRM'}. Specializing in localized market outreach and neural lead processing.`,
         signature: `Wassalam,\n${user?.name}\nSales Operations\n${tenant?.name}\nPh: +92 3XX XXXXXXX`,
         workingHoursStart: '09:00',
         workingHoursEnd: '18:00'

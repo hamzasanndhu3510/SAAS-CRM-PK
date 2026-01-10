@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, addOpportunity, addContact, addDraftEmail } from '../store/store';
 import { Opportunity, Contact } from '../types';
-import { generateOutreachPackage } from '../services/geminiService';
+import { generateOutreachPackage, suggestLeadFunnelStage } from '../services/geminiService';
+import ReactQuill from 'react-quill';
 
 const STAGES = [
   { id: 'lead', label: 'New Leads', color: 'bg-slate-400' },
@@ -11,6 +12,14 @@ const STAGES = [
   { id: 'qualified', label: 'Qualified', color: 'bg-amber-600' },
   { id: 'closed', label: 'Won Deal', color: 'bg-emerald-600' }
 ];
+
+const QUILL_MODULES = {
+    toolbar: [
+        ['bold', 'italic', 'underline'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['clean']
+    ],
+};
 
 const Pipeline: React.FC = () => {
     const dispatch = useDispatch();
@@ -25,6 +34,26 @@ const Pipeline: React.FC = () => {
         first_name: '', last_name: '', email: '', phone: '', city: '', 
         description: '', value: '0', category: 'smb'
     });
+
+    const [aiSuggestion, setAiSuggestion] = useState<{stage: string, reasoning: string} | null>(null);
+    const [isAiThinking, setIsAiThinking] = useState(false);
+
+    // AI Debounced Funnel Suggestion
+    useEffect(() => {
+        if (form.description.length > 50 && showModal) {
+            const timer = setTimeout(async () => {
+                setIsAiThinking(true);
+                const result = await suggestLeadFunnelStage({
+                    description: form.description,
+                    value: Number(form.value) || 0,
+                    tenant_name: tenant?.name || 'AH CRM'
+                });
+                setAiSuggestion({ stage: result.suggested_stage, reasoning: result.reasoning });
+                setIsAiThinking(false);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [form.description, form.value, tenant?.name, showModal]);
 
     const handleCreateLead = async () => {
         if (!form.first_name || !form.phone || !form.email) {
@@ -53,8 +82,11 @@ const Pipeline: React.FC = () => {
             ...form, 
             value: Number(form.value) || 0,
             tone: 'Professional & Persuasive',
-            tenant_name: tenant?.name || 'PakCRM' 
+            tenant_name: tenant?.name || 'AH CRM' 
         });
+
+        // Use AI suggested stage if available
+        const finalStage = aiSuggestion?.stage || 'lead';
 
         const opportunity: Opportunity = {
             id: Math.random().toString(36).substr(2, 9),
@@ -62,7 +94,7 @@ const Pipeline: React.FC = () => {
             contact_id: contactId,
             title: `${form.category.toUpperCase()} Lead - ${form.first_name}`,
             value: Number(form.value) || 0,
-            stage: 'lead',
+            stage: finalStage,
             assigned_to: user?.id || '',
             last_activity: new Date().toISOString()
         };
@@ -79,6 +111,7 @@ const Pipeline: React.FC = () => {
         setIsProcessing(false);
         setShowModal(false);
         setForm({ first_name: '', last_name: '', email: '', phone: '', city: '', description: '', value: '0', category: 'smb' });
+        setAiSuggestion(null);
     };
 
     return (
@@ -205,43 +238,8 @@ const Pipeline: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
+                            
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">WhatsApp / Phone *</label>
-                                    <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-2xl focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
-                                        <input 
-                                            value={form.phone} 
-                                            onChange={e => setForm({...form, phone: e.target.value})} 
-                                            placeholder="WhatsApp / Phone"
-                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-sm font-bold border-none outline-none dark:text-white transition-all" 
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Email Address *</label>
-                                    <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-2xl focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
-                                        <input 
-                                            value={form.email} 
-                                            onChange={e => setForm({...form, email: e.target.value})} 
-                                            placeholder="Email Address"
-                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-sm font-bold border-none outline-none dark:text-white transition-all" 
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Regional Hub (City)</label>
-                                    <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-2xl focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
-                                        <input 
-                                            value={form.city} 
-                                            onChange={e => setForm({...form, city: e.target.value})} 
-                                            placeholder="City"
-                                            className="w-full bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-sm font-bold border-none outline-none dark:text-white transition-all" 
-                                        />
-                                    </div>
-                                </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Deal Value (PKR)</label>
                                     <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-2xl focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
@@ -254,21 +252,45 @@ const Pipeline: React.FC = () => {
                                         />
                                     </div>
                                 </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Suggested Funnel Position</label>
+                                    <div className={`h-14 w-full rounded-2xl flex items-center px-6 transition-all border-2 ${isAiThinking ? 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 animate-pulse' : 'bg-primary-crm/5 border-primary-crm/20'}`}>
+                                        {isAiThinking ? (
+                                            <span className="text-[10px] font-black uppercase text-slate-400 flex items-center"><i className="fa-solid fa-brain fa-spin mr-3"></i> Neural Mapping...</span>
+                                        ) : (
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className="text-[10px] font-black uppercase text-primary-crm tracking-[0.2em]">{aiSuggestion?.stage || 'LEAD'}</span>
+                                                <i className="fa-solid fa-circle-check text-emerald-500"></i>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
+
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Lead Description & Intent</label>
-                                <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-[1.5rem] focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900">
-                                    <textarea 
-                                        placeholder="Brief description..." 
-                                        value={form.description} 
-                                        onChange={e => setForm({...form, description: e.target.value})} 
-                                        className="w-full h-32 bg-slate-50 dark:bg-slate-800/50 p-5 rounded-[1.5rem] text-sm font-bold border-none outline-none dark:text-white resize-none shadow-inner transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600" 
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Lead Description & Intent (Rich Text)</label>
+                                <div className="ring-1 ring-slate-100 dark:ring-slate-800 rounded-[1.5rem] focus-within:ring-2 focus-within:ring-primary-crm transition-all ring-offset-2 ring-offset-white dark:ring-offset-slate-900 overflow-hidden bg-slate-50 dark:bg-slate-800/50">
+                                    <ReactQuill 
+                                        theme="snow"
+                                        value={form.description}
+                                        onChange={val => setForm({...form, description: val})}
+                                        modules={QUILL_MODULES}
+                                        placeholder="Describe the lead's intent. AI will auto-categorize based on your input..."
                                     />
                                 </div>
                             </div>
+
+                            {aiSuggestion && (
+                                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/20 animate-in fade-in slide-in-from-top-2">
+                                    <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center mb-1">
+                                        <i className="fa-solid fa-sparkles mr-2"></i> Strategy Architect Note
+                                    </p>
+                                    <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 italic">"{aiSuggestion.reasoning}"</p>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="pt-6 mt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4">
+                        <div className="pt-6 mt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4 shrink-0">
                             <button 
                                 onClick={() => setShowModal(false)}
                                 className="flex-1 h-14 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -283,11 +305,11 @@ const Pipeline: React.FC = () => {
                                 {isProcessing ? (
                                     <>
                                         <i className="fa-solid fa-spinner fa-spin mr-3"></i>
-                                        Drafting Outreach...
+                                        Finalizing Blueprint...
                                     </>
                                 ) : (
                                     <>
-                                        Commit to Pipeline
+                                        Deploy to Pipeline
                                         <i className="fa-solid fa-wand-magic-sparkles ml-3 text-white/50"></i>
                                     </>
                                 )}

@@ -63,6 +63,22 @@ export interface AIAnalysis {
   personalized_email_draft?: string;
   email_subject?: string;
   lead_persona?: string;
+  suggested_stage?: string;
+}
+
+export interface Message {
+  id: UUID;
+  sender: 'user' | 'lead';
+  text: string;
+  timestamp: string;
+  is_ai_generated?: boolean;
+}
+
+export interface Conversation {
+  contact_id: UUID;
+  messages: Message[];
+  status: 'ai_handling' | 'human_needed' | 'closed';
+  last_activity: string;
 }
 
 export interface Contact {
@@ -79,6 +95,7 @@ export interface Contact {
   assigned_to: UUID;
   created_at: string;
   ai_analysis?: AIAnalysis;
+  conversation?: Conversation;
 }
 
 export interface Opportunity {

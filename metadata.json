@@ -1,6 +1,6 @@
 {
-  "name": "PakCRM - Multi-Tenant SaaS",
-  "description": "Production-ready Multi-tenant CRM for the Pakistani market with real-time pipelines, WhatsApp integration, and JazzCash/EasyPaisa support.",
+  "name": "AH CRM - Multi-Tenant SaaS",
+  "description": "Production-ready Multi-tenant CRM with real-time pipelines, WhatsApp integration, and JazzCash/EasyPaisa support.",
   "requestFramePermissions": [
     "camera",
     "microphone"

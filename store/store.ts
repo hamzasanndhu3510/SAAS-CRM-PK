@@ -1,6 +1,6 @@
 
 import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User, Tenant, Contact, Opportunity, DashboardData } from '../types';
+import { User, Tenant, Contact, Opportunity, DashboardData, AIAnalysis } from '../types';
 
 interface AuthState {
   user: User | null;
@@ -113,6 +113,10 @@ const crmSlice = createSlice({
       const opp = state.opportunities.find(o => o.id === action.payload.id);
       if (opp) opp.stage = action.payload.stage;
     },
+    updateContactAnalysis: (state, action: PayloadAction<{ id: string; analysis: AIAnalysis }>) => {
+      const contact = state.contacts.find(c => c.id === action.payload.id);
+      if (contact) contact.ai_analysis = action.payload.analysis;
+    },
     updateDashboard: (state, action: PayloadAction<Partial<DashboardData>>) => {
       state.dashboard = { ...state.dashboard, ...action.payload };
     }
@@ -120,7 +124,7 @@ const crmSlice = createSlice({
 });
 
 export const { setAuth, logout, updateTenant, toggleTheme, toggleSidebar, hydrateAuth } = authSlice.actions;
-export const { addContact, addContactsBatch, addOpportunity, addDraftEmail, markNotificationRead, updateOpportunityStage, updateDashboard } = crmSlice.actions;
+export const { addContact, addContactsBatch, addOpportunity, addDraftEmail, markNotificationRead, updateOpportunityStage, updateContactAnalysis, updateDashboard } = crmSlice.actions;
 
 export const store = configureStore({
   reducer: {

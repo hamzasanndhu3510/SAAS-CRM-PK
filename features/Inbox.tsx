@@ -1,9 +1,9 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState, addContact } from '../store/store';
+import { RootState, addContact, updateContactAnalysis } from '../store/store';
 import { Contact, Message } from '../types';
-import { processChatTriage } from '../services/geminiService';
+import { processChatTriage, analyzeLeadMessage } from '../services/geminiService';
 
 const Inbox: React.FC = () => {
     const dispatch = useDispatch();
@@ -14,7 +14,6 @@ const Inbox: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showNewChatModal, setShowNewChatModal] = useState(false);
     
-    // Simulate active conversations storage (in real app, this would be in Redux)
     const [conversations, setConversations] = useState<Record<string, { 
         messages: Message[], 
         status: 'ai_handling' | 'human_needed' 
@@ -49,7 +48,6 @@ const Inbox: React.FC = () => {
             is_ai_generated: false
         };
 
-        // Update conversation locally
         const updatedMessages = [...(conversations[selectedContactId]?.messages || []), newMessage];
         setConversations(prev => ({
             ...prev,
@@ -60,38 +58,42 @@ const Inbox: React.FC = () => {
         }));
         setInputText('');
 
-        // If message is from lead and we are in AI mode, trigger AI Triage
-        if (isLead && conversations[selectedContactId]?.status === 'ai_handling') {
-            setIsAiThinking(true);
-            const triage = await processChatTriage({
-                messages: updatedMessages,
-                tenant_name: tenant?.name || 'AH CRM',
-                contact_name: selectedContact?.first_name || 'Customer'
+        if (isLead) {
+            // Trigger Neural Scoring Analysis on lead reply
+            analyzeLeadMessage(text, tenant?.name || 'AH CRM').then(analysis => {
+                dispatch(updateContactAnalysis({ id: selectedContactId, analysis }));
             });
 
-            const aiMessage: Message = {
-                id: Math.random().toString(36).substr(2, 9),
-                sender: 'user',
-                text: triage.reply,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                is_ai_generated: true
-            };
+            if (conversations[selectedContactId]?.status === 'ai_handling') {
+                setIsAiThinking(true);
+                const triage = await processChatTriage({
+                    messages: updatedMessages,
+                    tenant_name: tenant?.name || 'AH CRM',
+                    contact_name: selectedContact?.first_name || 'Customer'
+                });
 
-            setConversations(prev => ({
-                ...prev,
-                [selectedContactId]: {
-                    messages: [...updatedMessages, aiMessage],
-                    status: triage.human_needed ? 'human_needed' : 'ai_handling'
-                }
-            }));
-            setIsAiThinking(false);
+                const aiMessage: Message = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    sender: 'user',
+                    text: triage.reply,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    is_ai_generated: true
+                };
+
+                setConversations(prev => ({
+                    ...prev,
+                    [selectedContactId]: {
+                        messages: [...updatedMessages, aiMessage],
+                        status: triage.human_needed ? 'human_needed' : 'ai_handling'
+                    }
+                }));
+                setIsAiThinking(false);
+            }
         }
     };
 
     return (
         <div className="mt-6 h-[calc(100vh-180px)] flex bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] animate-in fade-in zoom-in-95 duration-500 relative">
-            
-            {/* Conversations Sidebar */}
             <div className={`w-full lg:w-[380px] border-r border-slate-100 dark:border-slate-800 flex flex-col bg-slate-50/50 dark:bg-slate-950/40 ${selectedContactId ? 'hidden lg:flex' : 'flex'}`}>
                 <div className="p-8 pb-6 space-y-6 shrink-0">
                     <div className="flex justify-between items-center">
@@ -168,11 +170,9 @@ const Inbox: React.FC = () => {
                 </div>
             </div>
 
-            {/* Chat Canvas */}
             <div className={`flex-1 flex flex-col bg-white dark:bg-slate-900 ${!selectedContactId ? 'hidden lg:flex' : 'flex'}`}>
                 {selectedContact && activeConversation ? (
                     <>
-                        {/* Header */}
                         <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-8 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center z-10">
                             <div className="flex items-center space-x-5">
                                 <button onClick={() => setSelectedContactId(null)} className="lg:hidden h-10 w-10 text-slate-400 hover:text-slate-900 dark:hover:text-white">
@@ -214,7 +214,6 @@ const Inbox: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Message Feed */}
                         <div className="flex-1 overflow-y-auto p-8 lg:p-12 space-y-8 custom-scrollbar scroll-smooth bg-slate-50/30 dark:bg-slate-950/20">
                             {activeConversation.messages.map((msg, i) => (
                                 <div key={msg.id} className={`flex items-end space-x-4 animate-in fade-in duration-300 ${msg.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
@@ -237,7 +236,6 @@ const Inbox: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Input Rail */}
                         <div className="p-6 lg:p-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800">
                             <div className="flex items-center space-x-5 max-w-5xl mx-auto">
                                 <div className="flex-1 bg-white dark:bg-slate-800 rounded-[2rem] border-2 border-slate-100 dark:border-slate-700 shadow-inner flex items-center px-6 py-4">
@@ -249,7 +247,7 @@ const Inbox: React.FC = () => {
                                         className="w-full bg-transparent outline-none text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600" 
                                     />
                                     <button 
-                                        onClick={() => handleSendMessage("Simulation: Hi, tell me about your project.", true)}
+                                        onClick={() => handleSendMessage("Simulation: Hi, this looks great! I want to proceed with the order today.", true)}
                                         className="h-10 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-primary-crm transition-colors"
                                     >
                                         Simulate Lead
@@ -274,7 +272,6 @@ const Inbox: React.FC = () => {
                 )}
             </div>
 
-            {/* New Chat Modal */}
             {showNewChatModal && (
                 <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 animate-in fade-in duration-300">
                     <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl" onClick={() => setShowNewChatModal(false)}></div>

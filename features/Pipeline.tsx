@@ -38,7 +38,6 @@ const Pipeline: React.FC = () => {
     const [aiSuggestion, setAiSuggestion] = useState<{stage: string, reasoning: string} | null>(null);
     const [isAiThinking, setIsAiThinking] = useState(false);
 
-    // AI Debounced Funnel Suggestion
     useEffect(() => {
         if (form.description.length > 50 && showModal) {
             const timer = setTimeout(async () => {
@@ -85,7 +84,6 @@ const Pipeline: React.FC = () => {
             tenant_name: tenant?.name || 'AH CRM' 
         });
 
-        // Use AI suggested stage if available
         const finalStage = aiSuggestion?.stage || 'lead';
 
         const opportunity: Opportunity = {
@@ -116,7 +114,6 @@ const Pipeline: React.FC = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-20 relative">
-            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 sticky top-0 z-[60] py-6 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md">
                 <div className="pl-2">
                     <h2 className="text-4xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Active <span className="text-primary-crm">Pipeline</span></h2>
@@ -155,23 +152,41 @@ const Pipeline: React.FC = () => {
                                 opportunities.filter(o => o.stage === stage.id).map(opp => {
                                     const contact = contacts.find(c => c.id === opp.contact_id);
                                     const hasDraft = draftEmails.some(d => d.contactId === opp.contact_id);
+                                    const score = contact?.ai_analysis?.score || 0;
+                                    const sentiment = contact?.ai_analysis?.sentiment || 'neutral';
+                                    
                                     return (
                                         <div 
                                             key={opp.id} 
                                             onClick={() => setActiveDetailId(opp.id)}
                                             className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-slate-200/60 dark:border-slate-700/60 shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all cursor-pointer group relative overflow-hidden"
                                         >
+                                            {/* AI Scoring Prominent Display */}
+                                            {score > 0 && (
+                                                <div className={`absolute top-0 right-0 h-16 w-16 flex items-center justify-center rounded-bl-[2rem] border-b border-l ${
+                                                    sentiment === 'positive' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' :
+                                                    sentiment === 'negative' ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' :
+                                                    'bg-blue-500/10 border-blue-500/20 text-blue-500'
+                                                }`}>
+                                                    <div className="text-center">
+                                                        <p className="text-[8px] font-black uppercase tracking-tighter opacity-60">Heat</p>
+                                                        <p className="text-sm font-black tracking-tighter">{score}%</p>
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div className="flex justify-between items-start mb-4 relative z-10">
-                                                <div>
+                                                <div className="max-w-[70%]">
                                                     <h4 className="text-sm font-black text-slate-900 dark:text-white truncate uppercase tracking-tight group-hover:text-primary-crm transition-colors">{contact?.first_name} {contact?.last_name}</h4>
                                                     <p className="text-[9px] font-black text-slate-400 uppercase mt-1 tracking-widest">{contact?.city || 'Regional Lead'}</p>
                                                 </div>
-                                                {hasDraft && (
+                                                {hasDraft && !contact?.ai_analysis && (
                                                     <div className="h-8 w-8 rounded-2xl bg-primary-crm/10 dark:bg-primary-crm/20 text-primary-crm flex items-center justify-center shadow-inner group-hover:bg-primary-crm group-hover:text-white transition-all">
                                                         <i className="fa-solid fa-sparkles text-[10px]"></i>
                                                     </div>
                                                 )}
                                             </div>
+                                            
                                             <div className="flex items-center justify-between pt-5 border-t border-slate-50 dark:border-slate-700/50">
                                                 <div className="flex flex-col">
                                                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Value Est.</span>
@@ -194,7 +209,6 @@ const Pipeline: React.FC = () => {
                 ))}
             </div>
 
-            {/* Creation Modal - SYNCED WITH CONTACTS UI */}
             {showModal && (
                 <div className="fixed inset-0 lg:left-[var(--sidebar-width,80px)] lg:w-[calc(100%-var(--sidebar-width,80px))] z-[150] flex items-center justify-center p-6 animate-in fade-in duration-300">
                     <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl" onClick={() => !isProcessing && setShowModal(false)}></div>
@@ -253,17 +267,16 @@ const Pipeline: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Suggested Funnel Position</label>
-                                    <div className={`h-14 w-full rounded-2xl flex items-center px-6 transition-all border-2 ${isAiThinking ? 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 animate-pulse' : 'bg-primary-crm/5 border-primary-crm/20'}`}>
-                                        {isAiThinking ? (
-                                            <span className="text-[10px] font-black uppercase text-slate-400 flex items-center"><i className="fa-solid fa-brain fa-spin mr-3"></i> Neural Mapping...</span>
-                                        ) : (
-                                            <div className="flex items-center justify-between w-full">
-                                                <span className="text-[10px] font-black uppercase text-primary-crm tracking-[0.2em]">{aiSuggestion?.stage || 'LEAD'}</span>
-                                                <i className="fa-solid fa-circle-check text-emerald-500"></i>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Lead Category</label>
+                                    <select 
+                                        value={form.category} 
+                                        onChange={e => setForm({...form, category: e.target.value})}
+                                        className="w-full h-14 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-sm font-black border-none outline-none dark:text-white ring-1 ring-slate-100 dark:ring-slate-700 transition-all"
+                                    >
+                                        <option value="smb">Small Business (SMB)</option>
+                                        <option value="corporate">Enterprise Corporate</option>
+                                        <option value="individual">Direct Individual</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -280,14 +293,56 @@ const Pipeline: React.FC = () => {
                                 </div>
                             </div>
 
-                            {aiSuggestion && (
-                                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/20 animate-in fade-in slide-in-from-top-2">
-                                    <p className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center mb-1">
-                                        <i className="fa-solid fa-sparkles mr-2"></i> Strategy Architect Note
-                                    </p>
-                                    <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 italic">"{aiSuggestion.reasoning}"</p>
+                            {/* Prominent Neural Intelligence Panel */}
+                            <div className="relative mt-8 group">
+                                <div className={`p-8 rounded-[2.5rem] transition-all duration-700 border-2 overflow-hidden ${
+                                    isAiThinking 
+                                    ? 'bg-slate-50 dark:bg-slate-800/50 border-primary-crm/20 animate-pulse' 
+                                    : aiSuggestion 
+                                    ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-emerald-500/30' 
+                                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800'
+                                }`}>
+                                    <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none transition-transform group-hover:scale-110">
+                                        <i className="fa-solid fa-brain text-[8rem]"></i>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row justify-between items-start gap-6 relative z-10">
+                                        <div className="flex-1">
+                                            <div className="flex items-center space-x-3 mb-4">
+                                                <div className="h-10 w-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                                                    <i className={`fa-solid ${isAiThinking ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'}`}></i>
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Neural Intelligence Report</h4>
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">Automated Funnel Assessment</p>
+                                                </div>
+                                            </div>
+
+                                            {isAiThinking ? (
+                                                <div className="space-y-3">
+                                                    <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse"></div>
+                                                    <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse delay-75"></div>
+                                                </div>
+                                            ) : aiSuggestion ? (
+                                                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                                    <p className="text-[13px] font-bold text-slate-600 dark:text-slate-300 leading-relaxed italic">
+                                                        "{aiSuggestion.reasoning}"
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">Provide more details for AI analysis...</p>
+                                            )}
+                                        </div>
+
+                                        {!isAiThinking && aiSuggestion && (
+                                            <div className="shrink-0 flex flex-col items-center justify-center p-6 bg-emerald-500 dark:bg-emerald-600 rounded-3xl text-white shadow-2xl shadow-emerald-500/30 animate-in zoom-in-95 duration-500">
+                                                <p className="text-[8px] font-black uppercase tracking-[0.3em] mb-1.5 opacity-80">Target Stage</p>
+                                                <span className="text-sm font-black uppercase tracking-widest">{aiSuggestion.stage}</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            )}
+                            </div>
                         </div>
 
                         <div className="pt-6 mt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4 shrink-0">
@@ -305,12 +360,12 @@ const Pipeline: React.FC = () => {
                                 {isProcessing ? (
                                     <>
                                         <i className="fa-solid fa-spinner fa-spin mr-3"></i>
-                                        Finalizing Blueprint...
+                                        Syncing Neural Identity...
                                     </>
                                 ) : (
                                     <>
-                                        Deploy to Pipeline
-                                        <i className="fa-solid fa-wand-magic-sparkles ml-3 text-white/50"></i>
+                                        Commit to Pipeline
+                                        <i className="fa-solid fa-bolt ml-3 text-white/50"></i>
                                     </>
                                 )}
                             </button>
